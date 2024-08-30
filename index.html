@@ -90,7 +90,7 @@
         }
         #controlInstructions {
             position: absolute;
-            top: 25%; /* Position it about halfway between the top and the center */
+            top: calc(25% - 30px); /* Moved 30px higher */
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.7);
@@ -100,6 +100,7 @@
             font-size: 14px;
             text-align: center;
             white-space: pre-line;
+            width: 250px;
         }
         #startButton {
             position: absolute;
@@ -185,11 +186,12 @@
             loadHighScores();
             overlay.style.display = 'flex';
             overlayText.textContent = 'Snake Game';
-            controlInstructions.textContent = 'Controls:\nLeft arrow: turn left\nRight arrow: turn right';
+            controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
             controlInstructions.style.display = 'block';
             currentPlayerScore = null;
             updateTopScoresDisplay();
             startButton.style.display = 'block';
+            addTouchControls();
         }
 
         function loadHighScores() {
@@ -224,7 +226,7 @@
             }
             
             overlay.style.display = 'flex';
-            controlInstructions.textContent = 'Controls:\nLeft arrow: turn left\nRight arrow: turn right';
+            controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
             controlInstructions.style.display = 'block';
         }
 
@@ -281,6 +283,7 @@
                     overlay.style.display = 'none';
                     controlInstructions.style.display = 'none';
                     gameState = 'playing';
+                    canvas.style.touchAction = 'none'; // Disable default touch actions
                     requestAnimationFrame(gameLoop);
                 }
             }
@@ -429,6 +432,31 @@
                 topScoresList.appendChild(li);
             }
         }
+
+        function addTouchControls() {
+            canvas.addEventListener('touchstart', handleTouch, false);
+            canvas.addEventListener('touchmove', handleTouch, false);
+
+            function handleTouch(event) {
+                event.preventDefault(); // Prevent scrolling when touching the canvas
+                const touch = event.touches[0];
+                const canvasRect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - canvasRect.left;
+
+                if (gameState === 'playing') {
+                    if (touchX < canvas.width / 2) {
+                        turnLeft();
+                    } else {
+                        turnRight();
+                    }
+                } else if (gameState === 'initial' || gameState === 'gameover') {
+                    startGame();
+                }
+            }
+        }
+
+        // Call this function after initializing the game
+        addTouchControls();
 
         document.addEventListener('keydown', (e) => {
             if ((gameState === 'initial' || gameState === 'gameover') && e.code === 'Space') {
