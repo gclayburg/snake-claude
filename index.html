@@ -102,11 +102,9 @@
             white-space: pre-line;
             width: 250px;
         }
-        #startButton {
+        #startButton, #fullscreenButton {
             position: absolute;
             bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
             background-color: #4CAF50;
             border: none;
             color: white;
@@ -121,7 +119,17 @@
             transition-duration: 0.4s;
         }
 
-        #startButton:hover {
+        #startButton {
+            left: calc(50% - 120px);
+            transform: translateX(-50%);
+        }
+
+        #fullscreenButton {
+            left: calc(50% + 120px);
+            transform: translateX(-50%);
+        }
+
+        #startButton:hover, #fullscreenButton:hover {
             background-color: #45a049;
         }
     </style>
@@ -136,6 +144,7 @@
                 <p id="highScore"></p>
             </div>
             <button id="startButton">Press space bar to start</button>
+            <button id="fullscreenButton">Start full screen</button>
             <div id="controlInstructions"></div>
         </div>
         <div id="topScoresBox">
@@ -155,6 +164,7 @@
         const gameInstructions = document.getElementById('gameInstructions');
         const controlInstructions = document.getElementById('controlInstructions');
         const startButton = document.getElementById('startButton');
+        const fullscreenButton = document.getElementById('fullscreenButton');
 
         const gridSize = 20;
         const tileCount = 20; // Change this line
@@ -191,6 +201,7 @@
             currentPlayerScore = null;
             updateTopScoresDisplay();
             startButton.style.display = 'block';
+            fullscreenButton.style.display = 'block';
             addTouchControls();
         }
 
@@ -261,6 +272,7 @@
             
             // Hide all elements except the canvas and overlay
             startButton.style.display = 'none';
+            fullscreenButton.style.display = 'none';
             currentScoreElement.style.display = 'none';
             highScoreElement.style.display = 'none';
             
@@ -457,6 +469,31 @@
 
         // Call this function after initializing the game
         addTouchControls();
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gridSize = Math.min(canvas.width, canvas.height) / tileCount;
+            drawWalls();
+        }
+
+        fullscreenButton.addEventListener('click', () => {
+            if (gameState === 'initial' || gameState === 'gameover') {
+                toggleFullScreen();
+                resizeCanvas();
+                startGame();
+            }
+        });
+
+        window.addEventListener('resize', resizeCanvas);
 
         document.addEventListener('keydown', (e) => {
             if ((gameState === 'initial' || gameState === 'gameover') && e.code === 'Space') {
