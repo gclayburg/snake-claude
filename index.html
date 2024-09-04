@@ -124,6 +124,49 @@
         #startButton:hover {
             background-color: #45a049;
         }
+        
+        #initialsInputContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        #initialsInput {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            position: relative;
+            margin-right: 10px;
+            width: 90px;
+            height: 40px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+        }
+        
+        #initialsInput::placeholder {
+            color: #999;
+            letter-spacing: 10px;
+        }
+        
+        #okButton {
+            font-size: 18px;
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            height: 44px; /* Match the height of the input field */
+        }
+        
+        #okButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +175,10 @@
             <canvas id="gameCanvas" width="404" height="404"></canvas>
             <div id="gameOverlay">
                 <p id="overlayText"></p>
+                <div id="initialsInputContainer">
+                    <input type="text" id="initialsInput" maxlength="3" autocomplete="off" placeholder="___" />
+                    <button id="okButton" disabled>OK</button>
+                </div>
                 <p id="currentScore"></p>
                 <p id="highScore"></p>
             </div>
@@ -155,6 +202,8 @@
         const gameInstructions = document.getElementById('gameInstructions');
         const controlInstructions = document.getElementById('controlInstructions');
         const startButton = document.getElementById('startButton');
+        const initialsInput = document.getElementById('initialsInput');
+        const okButton = document.getElementById('okButton');
 
         const gridSize = 20;
         const tileCount = 20; // Change this line
@@ -175,11 +224,14 @@
         let currentInitials = '';
         let currentPlayerScore = null;
 
+        let nextDirection = { dx: 0, dy: -1 };
+
         function initGame() {
             snake = [{x: Math.floor(tileCount / 2), y: tileCount - 1}];
             food = {x: 15, y: 15};
             dx = 0;
             dy = -1;
+            nextDirection = { dx: 0, dy: -1 };
             score = 0;
             gameOver = false;
             gameState = 'initial';
@@ -191,6 +243,8 @@
             currentPlayerScore = null;
             updateTopScoresDisplay();
             startButton.style.display = 'block';
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none'; // Ensure OK button is hidden on init
             addTouchControls();
         }
 
@@ -219,18 +273,23 @@
             isNewHighScore = checkNewHighScore(score);
             
             if (isNewHighScore) {
-                overlayText.textContent = `New high score #${isNewHighScore}!\nEnter Initials:`;
+                overlayText.textContent = `New high score #${isNewHighScore}!`;
+                initialsInput.value = '';
+                initialsInput.placeholder = '___';
+                initialsInput.style.display = 'block';
+                okButton.style.display = 'inline-block';
+                okButton.disabled = true;
                 currentInitials = '';
             } else {
                 showHighScores();
             }
-            
             overlay.style.display = 'flex';
             controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
             controlInstructions.style.display = 'block';
         }
 
         function checkNewHighScore(score) {
+            if (score === 0) return false; // Don't trigger high score for 0 points
             for (let i = 0; i < highScores.length; i++) {
                 if (score > highScores[i].score) {
                     return i + 1;
@@ -241,9 +300,11 @@
 
         function showHighScores() {
             overlayText.textContent = 'Game Over!';
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none';
             currentScoreElement.textContent = `Your score: ${score}`;
             highScoreElement.textContent = '';
-            startButton.textContent = 'Press space to restart';
+            startButton.textContent = 'Tap to restart';
             startButton.style.display = 'block';
             controlInstructions.style.display = 'block';
         }
@@ -256,13 +317,17 @@
             food = {x: 15, y: 15};
             dx = 0;
             dy = -1;
+            nextDirection = { dx: 0, dy: -1 };
             score = 0;
             gameOver = false;
+            currentPlayerScore = null; // Reset the current player score
             
             // Hide all elements except the canvas and overlay
             startButton.style.display = 'none';
             currentScoreElement.style.display = 'none';
             highScoreElement.style.display = 'none';
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none'; // Ensure OK button is hidden when starting a new game
             
             // Keep the canvas visible but clear it
             clearCanvas();
@@ -294,6 +359,9 @@
         function gameLoop() {
             if (gameState === 'playing') {
                 clearCanvas();
+                // Apply the next direction
+                dx = nextDirection.dx;
+                dy = nextDirection.dy;
                 moveSnake();
                 drawWalls();
                 drawFood();
@@ -318,7 +386,7 @@
         }
 
         function drawFood() {
-            ctx.fillStyle = 'blue';
+            ctx.fillStyle = 'red';
             ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
         }
 
@@ -341,6 +409,19 @@
                 snake.pop();
             }
         }
+        /**
+         * Generates a new food item for the snake to eat.
+         * 
+         * This function creates a new food object with random x and y coordinates
+         * within the game grid. It ensures that the new food does not appear on
+         * any part of the snake's body.
+         * 
+         * The function uses a do-while loop to repeatedly generate new coordinates
+         * until a valid position (not occupied by the snake) is found.
+         * 
+         * Once a valid position is found, the global 'food' variable is updated
+         * with the new coordinates.
+         */
 
         function generateFood() {
             let newFood;
@@ -375,17 +456,17 @@
         }
 
         function turnLeft() {
-            if (dx === 1) { dx = 0; dy = -1; }
-            else if (dx === -1) { dx = 0; dy = 1; }
-            else if (dy === 1) { dx = 1; dy = 0; }
-            else if (dy === -1) { dx = -1; dy = 0; }
+            if (dx === 1) { nextDirection = { dx: 0, dy: -1 }; }
+            else if (dx === -1) { nextDirection = { dx: 0, dy: 1 }; }
+            else if (dy === 1) { nextDirection = { dx: 1, dy: 0 }; }
+            else if (dy === -1) { nextDirection = { dx: -1, dy: 0 }; }
         }
 
         function turnRight() {
-            if (dx === 1) { dx = 0; dy = 1; }
-            else if (dx === -1) { dx = 0; dy = -1; }
-            else if (dy === 1) { dx = -1; dy = 0; }
-            else if (dy === -1) { dx = 1; dy = 0; }
+            if (dx === 1) { nextDirection = { dx: 0, dy: 1 }; }
+            else if (dx === -1) { nextDirection = { dx: 0, dy: -1 }; }
+            else if (dy === 1) { nextDirection = { dx: -1, dy: 0 }; }
+            else if (dy === -1) { nextDirection = { dx: 1, dy: 0 }; }
         }
 
         function updateTopScoresDisplay(gameOver = false) {
@@ -468,14 +549,12 @@
                 if (isNewHighScore) {
                     if (e.key.length === 1 && /[a-zA-Z]/.test(e.key) && currentInitials.length < 3) {
                         currentInitials += e.key.toUpperCase();
-                        overlayText.textContent = `New high score #${isNewHighScore}!\nEnter Initials: ${currentInitials}`;
+                        updateInitialsDisplay();
                     } else if (e.key === 'Enter' && currentInitials.length === 3) {
-                        addHighScore(score, currentInitials);
-                        isNewHighScore = false;
-                        showHighScores();
+                        submitHighScore();
                     } else if (e.key === 'Backspace') {
                         currentInitials = currentInitials.slice(0, -1);
-                        overlayText.textContent = `New high score #${isNewHighScore}!\nEnter Initials: ${currentInitials}`;
+                        updateInitialsDisplay();
                     }
                 } else if (e.code === 'Space') {
                     initGame();
@@ -496,13 +575,81 @@
             }
         });
 
+        function updateInitialsDisplay() {
+            initialsInput.value = currentInitials.padEnd(3, '_');
+            const charWidth = 24; // Width of each character (including letter-spacing)
+            const cursorPosition = currentInitials.length * charWidth;
+            initialsInput.style.setProperty('--cursor-position', `${cursorPosition}px`);
+            
+            // Enable or disable the OK button based on initials length
+            okButton.disabled = currentInitials.length !== 3;
+        }
+
+        function submitHighScore() {
+            addHighScore(score, currentInitials);
+            isNewHighScore = false;
+            showHighScores();
+        }
+
+        initialsInput.addEventListener('input', function(e) {
+            let newValue = this.value.toUpperCase();
+            
+            // Ensure we only have letters
+            newValue = newValue.replace(/[^A-Z]/g, '');
+            
+            // Limit to 3 characters
+            newValue = newValue.slice(0, 3);
+            
+            // Update the input value
+            this.value = newValue;
+            currentInitials = newValue;
+            
+            // Enable/disable OK button
+            okButton.disabled = newValue.length !== 3;
+            
+            // Update placeholder based on input
+            this.placeholder = '_'.repeat(Math.max(0, 3 - newValue.length));
+        });
+        
+        initialsInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.selectionStart === this.selectionEnd) {
+                // If cursor is at the end, just let the default behavior happen
+                if (this.selectionStart === this.value.length) return;
+                
+                // Prevent default backspace behavior
+                e.preventDefault();
+                
+                // Remove the character before the cursor
+                const cursorPos = this.selectionStart;
+                this.value = this.value.slice(0, cursorPos - 1) + this.value.slice(cursorPos);
+                
+                // Move the cursor back
+                this.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                
+                // Trigger input event to update state
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+        
+        initialsInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.length === 3) {
+                submitHighScore();
+            }
+        });
+
+        okButton.addEventListener('click', function() {
+            if (currentInitials.length === 3) {
+                submitHighScore();
+            }
+        });
+
         startButton.addEventListener('click', () => {
             if (gameState === 'initial' || gameState === 'gameover') {
                 startGame();
             }
         });
 
-        initGame();
+        initGame(); // Call this at the end of the script
     </script>
 </body>
 </html>
