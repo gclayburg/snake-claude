@@ -34,7 +34,7 @@
             /* This removes any extra space below the canvas */
         }
 
-             #gameOverlay  {
+        #gameOverlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -247,7 +247,6 @@
 
         let nextDirection = { dx: 0, dy: -1 };
         let inputQueue = [];
-        let lastUpdateTime = 0;
         let updateInterval = 100; // Adjust this value to change the snake's speed (higher = slower)
 
         function initGame() {
@@ -373,38 +372,36 @@
                     controlInstructions.style.display = 'none';
                     gameState = 'playing';
                     canvas.style.touchAction = 'none'; // Disable default touch actions
-                    lastUpdateTime = 0;
-                    requestAnimationFrame(gameLoop);
+                    setTimeout(gameLoop, updateInterval);
                 }
             }
 
             updateCountdown();
         }
 
-        function gameLoop(currentTime) {
-            console.log('looping '+ currentTime);
+        function gameLoop() {
             if (gameState === 'playing') {
-                if (currentTime - lastUpdateTime > updateInterval) {
-                    clearCanvas();
-                    processInputQueue();
-                    moveSnake();
-                    drawWalls();
-                    drawFood();
-                    drawSnake();
-                    checkCollision();
-                    drawScore();
-                    updateTopScoresDisplay();
-                    lastUpdateTime = currentTime;
-                }
+                clearCanvas();
+                processInputQueue();
+                moveSnake();
+                drawWalls();
+                drawFood();
+                drawSnake();
+                checkCollision();
+                drawScore();
+                updateTopScoresDisplay();
+
+                setTimeout(gameLoop, updateInterval);
             }
-            requestAnimationFrame(gameLoop);
         }
 
         function processInputQueue() {
             const input = inputQueue.shift();
             if (input === 'left') {
+                console.log('turning left');
                 turnLeft();
             } else if (input === 'right') {
+                console.log('turning right');
                 turnRight();
             }
         }
@@ -616,9 +613,11 @@
 
             switch (e.key) {
                 case 'ArrowLeft':
+                    console.log('  go left');
                     inputQueue.push('left');
                     break;
                 case 'ArrowRight':
+                    console.log('  go right');
                     inputQueue.push('right');
                     break;
             }
