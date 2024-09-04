@@ -561,8 +561,7 @@
         }
 
         function addTouchControls() {
-            canvas.addEventListener('touchstart', handleTouch, false);
-            canvas.addEventListener('touchmove', handleTouch, false);
+            canvas.addEventListener('touchstart', handleTouch, { passive: false });
 
             function handleTouch(event) {
                 event.preventDefault(); // Prevent scrolling when touching the canvas
