@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,19 +15,24 @@
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
         }
+
         #gameContainer {
             display: flex;
             align-items: flex-start;
         }
+
         #gameArea {
             position: relative;
             width: 404px;
             height: 404px;
         }
+
         canvas {
             border: 2px solid #000;
-            display: block; /* This removes any extra space below the canvas */
+            display: block;
+            /* This removes any extra space below the canvas */
         }
+
         #gameOverlay {
             position: absolute;
             top: 0;
@@ -42,9 +48,11 @@
             font-size: 24px;
             text-align: center;
         }
+
         #gameOverlay p {
             margin: 10px 0;
         }
+
         #topScoresBox {
             width: 150px;
             margin-left: 20px;
@@ -55,18 +63,22 @@
             font-size: 14px;
             text-align: left;
         }
+
         #topScoresBox h3 {
             margin-top: 0;
             text-align: center;
         }
+
         #topScoresBox ul {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
+
         #topScoresBox li {
             margin-bottom: 5px;
         }
+
         #gameInstructions {
             position: absolute;
             bottom: 10px;
@@ -79,18 +91,22 @@
             font-size: 14px;
             text-align: center;
         }
+
         #overlayText {
             text-align: left;
             white-space: pre-wrap;
             padding: 0 20px;
         }
+
         .current-score {
             color: green;
             font-weight: bold;
         }
+
         #controlInstructions {
             position: absolute;
-            top: calc(25% - 30px); /* Moved 30px higher */
+            top: calc(25% - 30px);
+            /* Moved 30px higher */
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.7);
@@ -102,6 +118,7 @@
             white-space: pre-line;
             width: 250px;
         }
+
         #startButton {
             position: absolute;
             bottom: 50px;
@@ -124,14 +141,14 @@
         #startButton:hover {
             background-color: #45a049;
         }
-        
+
         #initialsInputContainer {
             display: flex;
             align-items: center;
             justify-content: center;
             margin-top: 10px;
         }
-        
+
         #initialsInput {
             font-family: 'Courier New', monospace;
             font-size: 24px;
@@ -146,12 +163,12 @@
             background-color: #fff;
             color: #000;
         }
-        
+
         #initialsInput::placeholder {
             color: #999;
             letter-spacing: 10px;
         }
-        
+
         #okButton {
             font-size: 18px;
             padding: 10px 15px;
@@ -160,15 +177,17 @@
             color: white;
             border: none;
             border-radius: 5px;
-            height: 44px; /* Match the height of the input field */
+            height: 44px;
+            /* Match the height of the input field */
         }
-        
+
         #okButton:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
     </style>
 </head>
+
 <body>
     <div id="gameContainer">
         <div id="gameArea">
@@ -209,9 +228,9 @@
         const tileCount = 20; // Change this line
 
         let snake = [
-            {x: 10, y: 10},
+            { x: 10, y: 10 },
         ];
-        let food = {x: 15, y: 15};
+        let food = { x: 15, y: 15 };
         let dx = 1;
         let dy = 0;
         let score = 0;
@@ -227,8 +246,8 @@
         let nextDirection = { dx: 0, dy: -1 };
 
         function initGame() {
-            snake = [{x: Math.floor(tileCount / 2), y: tileCount - 1}];
-            food = {x: 15, y: 15};
+            snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
+            food = { x: 15, y: 15 };
             dx = 0;
             dy = -1;
             nextDirection = { dx: 0, dy: -1 };
@@ -271,7 +290,7 @@
             gameState = 'gameover';
             gameOver = true;
             isNewHighScore = checkNewHighScore(score);
-            
+
             if (isNewHighScore) {
                 overlayText.textContent = `New high score #${isNewHighScore}!`;
                 initialsInput.value = '';
@@ -311,30 +330,30 @@
 
         function startGame() {
             gameState = 'starting';
-            
+
             // Reset game variables
-            snake = [{x: Math.floor(tileCount / 2), y: tileCount - 1}];
-            food = {x: 15, y: 15};
+            snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
+            food = { x: 15, y: 15 };
             dx = 0;
             dy = -1;
             nextDirection = { dx: 0, dy: -1 };
             score = 0;
             gameOver = false;
             currentPlayerScore = null; // Reset the current player score
-            
+
             // Hide all elements except the canvas and overlay
             startButton.style.display = 'none';
             currentScoreElement.style.display = 'none';
             highScoreElement.style.display = 'none';
             initialsInput.style.display = 'none';
             okButton.style.display = 'none'; // Ensure OK button is hidden when starting a new game
-            
+
             // Keep the canvas visible but clear it
             clearCanvas();
             drawWalls();
-            
+
             overlay.style.display = 'flex';
-            
+
             let countdown = ['Ready', 'Set', 'Go!'];
             let index = 0;
 
@@ -398,7 +417,7 @@
         }
 
         function moveSnake() {
-            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
@@ -431,7 +450,7 @@
                     y: Math.floor(Math.random() * tileCount)
                 };
             } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
-            
+
             food = newFood;
         }
 
@@ -473,26 +492,26 @@
             topScoresList.innerHTML = '';
             let currentScoreInserted = false;
             let displayedScores = [...highScores];
-            
+
             if (!gameOver) {
                 // Find where the current score should be inserted
                 let insertIndex = displayedScores.findIndex(entry => score > entry.score);
                 if (insertIndex === -1 && displayedScores.length < 10) {
                     insertIndex = displayedScores.length;
                 }
-                
+
                 if (insertIndex !== -1) {
                     displayedScores.splice(insertIndex, 0, { score, initials: 'YOU' });
                     currentScoreInserted = true;
                 }
             }
-            
+
             displayedScores = displayedScores.slice(0, 10);
 
             for (let i = 0; i < displayedScores.length; i++) {
                 const li = document.createElement('li');
                 const scoreEntry = displayedScores[i];
-                
+
                 if (!gameOver && scoreEntry.initials === 'YOU') {
                     li.innerHTML = `${i + 1}. <span class="current-score">YOU - ${scoreEntry.score}</span>`;
                 } else {
@@ -580,7 +599,7 @@
             const charWidth = 24; // Width of each character (including letter-spacing)
             const cursorPosition = currentInitials.length * charWidth;
             initialsInput.style.setProperty('--cursor-position', `${cursorPosition}px`);
-            
+
             // Enable or disable the OK button based on initials length
             okButton.disabled = currentInitials.length !== 3;
         }
@@ -591,53 +610,53 @@
             showHighScores();
         }
 
-        initialsInput.addEventListener('input', function(e) {
+        initialsInput.addEventListener('input', function (e) {
             let newValue = this.value.toUpperCase();
-            
+
             // Ensure we only have letters
             newValue = newValue.replace(/[^A-Z]/g, '');
-            
+
             // Limit to 3 characters
             newValue = newValue.slice(0, 3);
-            
+
             // Update the input value
             this.value = newValue;
             currentInitials = newValue;
-            
+
             // Enable/disable OK button
             okButton.disabled = newValue.length !== 3;
-            
+
             // Update placeholder based on input
             this.placeholder = '_'.repeat(Math.max(0, 3 - newValue.length));
         });
-        
-        initialsInput.addEventListener('keydown', function(e) {
+
+        initialsInput.addEventListener('keydown', function (e) {
             if (e.key === 'Backspace' && this.selectionStart === this.selectionEnd) {
                 // If cursor is at the end, just let the default behavior happen
                 if (this.selectionStart === this.value.length) return;
-                
+
                 // Prevent default backspace behavior
                 e.preventDefault();
-                
+
                 // Remove the character before the cursor
                 const cursorPos = this.selectionStart;
                 this.value = this.value.slice(0, cursorPos - 1) + this.value.slice(cursorPos);
-                
+
                 // Move the cursor back
                 this.setSelectionRange(cursorPos - 1, cursorPos - 1);
-                
+
                 // Trigger input event to update state
                 this.dispatchEvent(new Event('input'));
             }
         });
-        
-        initialsInput.addEventListener('keypress', function(e) {
+
+        initialsInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && this.value.length === 3) {
                 submitHighScore();
             }
         });
 
-        okButton.addEventListener('click', function() {
+        okButton.addEventListener('click', function () {
             if (currentInitials.length === 3) {
                 submitHighScore();
             }
@@ -652,4 +671,5 @@
         initGame(); // Call this at the end of the script
     </script>
 </body>
+
 </html>
