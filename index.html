@@ -233,8 +233,8 @@
             { x: 10, y: 10 },
         ];
         let food = { x: 15, y: 15 };
-        let dx = 1;
-        let dy = 0;
+        let dx = 0;
+        let dy = -1;
         let score = 0;
         let highScore = 0;
         let gameOver = false;
@@ -246,6 +246,9 @@
         let currentPlayerScore = null;
 
         let nextDirection = { dx: 0, dy: -1 };
+        let inputQueue = [];
+        let lastUpdateTime = 0;
+        let updateInterval = 100; // Adjust this value to change the snake's speed (higher = slower)
 
         function initGame() {
             snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
@@ -370,6 +373,7 @@
                     controlInstructions.style.display = 'none';
                     gameState = 'playing';
                     canvas.style.touchAction = 'none'; // Disable default touch actions
+                    lastUpdateTime = 0;
                     requestAnimationFrame(gameLoop);
                 }
             }
@@ -377,21 +381,31 @@
             updateCountdown();
         }
 
-        function gameLoop() {
+        function gameLoop(currentTime) {
+            console.log('looping '+ currentTime);
             if (gameState === 'playing') {
-                clearCanvas();
-                // Apply the next direction
-                dx = nextDirection.dx;
-                dy = nextDirection.dy;
-                moveSnake();
-                drawWalls();
-                drawFood();
-                drawSnake();
-                checkCollision();
-                drawScore();
-                updateTopScoresDisplay(); // Update the display every frame
+                if (currentTime - lastUpdateTime > updateInterval) {
+                    clearCanvas();
+                    processInputQueue();
+                    moveSnake();
+                    drawWalls();
+                    drawFood();
+                    drawSnake();
+                    checkCollision();
+                    drawScore();
+                    updateTopScoresDisplay();
+                    lastUpdateTime = currentTime;
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
 
-                setTimeout(() => requestAnimationFrame(gameLoop), 100);
+        function processInputQueue() {
+            const input = inputQueue.shift();
+            if (input === 'left') {
+                turnLeft();
+            } else if (input === 'right') {
+                turnRight();
             }
         }
 
@@ -419,13 +433,17 @@
         }
 
         function moveSnake() {
+            // Apply the nextDirection
+            dx = nextDirection.dx;
+            dy = nextDirection.dy;
+
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 generateFood();
-                updateTopScoresDisplay(); // Update the display after eating food
+                updateTopScoresDisplay();
             } else {
                 snake.pop();
             }
@@ -477,17 +495,27 @@
         }
 
         function turnLeft() {
-            if (dx === 1) { nextDirection = { dx: 0, dy: -1 }; }
-            else if (dx === -1) { nextDirection = { dx: 0, dy: 1 }; }
-            else if (dy === 1) { nextDirection = { dx: 1, dy: 0 }; }
-            else if (dy === -1) { nextDirection = { dx: -1, dy: 0 }; }
+            if (dx === 0 && dy === -1) { // facing up
+                nextDirection = { dx: -1, dy: 0 }; // turn left
+            } else if (dx === -1 && dy === 0) { // facing left
+                nextDirection = { dx: 0, dy: 1 }; // turn down
+            } else if (dx === 0 && dy === 1) { // facing down
+                nextDirection = { dx: 1, dy: 0 }; // turn right
+            } else if (dx === 1 && dy === 0) { // facing right
+                nextDirection = { dx: 0, dy: -1 }; // turn up
+            }
         }
 
         function turnRight() {
-            if (dx === 1) { nextDirection = { dx: 0, dy: 1 }; }
-            else if (dx === -1) { nextDirection = { dx: 0, dy: -1 }; }
-            else if (dy === 1) { nextDirection = { dx: -1, dy: 0 }; }
-            else if (dy === -1) { nextDirection = { dx: 1, dy: 0 }; }
+            if (dx === 0 && dy === -1) { // facing up
+                nextDirection = { dx: 1, dy: 0 }; // turn right
+            } else if (dx === 1 && dy === 0) { // facing right
+                nextDirection = { dx: 0, dy: 1 }; // turn down
+            } else if (dx === 0 && dy === 1) { // facing down
+                nextDirection = { dx: -1, dy: 0 }; // turn left
+            } else if (dx === -1 && dy === 0) { // facing left
+                nextDirection = { dx: 0, dy: -1 }; // turn up
+            }
         }
 
         function updateTopScoresDisplay(gameOver = false) {
@@ -547,9 +575,9 @@
 
                 if (gameState === 'playing') {
                     if (touchX < canvas.width / 2) {
-                        turnLeft();
+                        inputQueue.push('left');
                     } else {
-                        turnRight();
+                        inputQueue.push('right');
                     }
                 } else if (gameState === 'initial' || gameState === 'gameover') {
                     startGame();
@@ -588,10 +616,10 @@
 
             switch (e.key) {
                 case 'ArrowLeft':
-                    turnLeft();
+                    inputQueue.push('left');
                     break;
                 case 'ArrowRight':
-                    turnRight();
+                    inputQueue.push('right');
                     break;
             }
         });
