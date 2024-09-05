@@ -14,6 +14,7 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            touch-action: none; /* Disable browser handling of all panning and zooming gestures */
         }
 
         #gameContainer {
@@ -54,31 +55,44 @@
             margin: 10px 0;
         }
 
+        #sidePanel {
+            display: flex;
+            flex-direction: column;
+            width: 404px; /* Match the width of the game area */
+            margin-top: 20px; /* Add some space between game area and touch log */
+        }
+
         #topScoresBox {
-            width: 150px;
-            margin-top: 20px;
-            margin-left: 0;
+            display: none; /* Hide the top 10 list */
+        }
+
+        #touchLog {
+            width: 100%; /* Full width of the side panel */
+            margin-top: 0; /* Remove top margin as it's now below the game area */
             background-color: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 10px;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 12px;
             text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
-        #topScoresBox h3 {
+        #touchLog h3 {
             margin-top: 0;
             text-align: center;
         }
 
-        #topScoresBox ul {
+        #touchLogList {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
 
-        #topScoresBox li {
+        #touchLogList li {
             margin-bottom: 5px;
+            word-wrap: break-word;
         }
 
         #gameInstructions {
@@ -187,6 +201,11 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
+        /* If you have any other interactive elements, you might need to re-enable touch actions for them */
+        button, input {
+            touch-action: auto;
+        }
     </style>
 </head>
 
@@ -206,9 +225,11 @@
             <button id="startButton">Press space bar to start</button>
             <div id="controlInstructions"></div>
         </div>
-        <div id="topScoresBox">
-            <h3>Top 10</h3>
-            <ul id="topScoresList"></ul>
+        <div id="sidePanel">
+            <div id="touchLog">
+                <h3>Touch Log</h3>
+                <ul id="touchLogList"></ul>
+            </div>
         </div>
     </div>
 
@@ -225,6 +246,7 @@
         const startButton = document.getElementById('startButton');
         const initialsInput = document.getElementById('initialsInput');
         const okButton = document.getElementById('okButton');
+        const touchLogList = document.getElementById('touchLogList');
 
         const gridSize = 20;
         const tileCount = 20; // Change this line
@@ -248,6 +270,7 @@
         let nextDirection = { dx: 0, dy: -1 };
         let inputQueue = [];
         let updateInterval = 100; // Adjust this value to change the snake's speed (higher = slower)
+        let loopCount = 0;
 
         function initGame() {
             snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
@@ -264,7 +287,15 @@
             controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
             controlInstructions.style.display = 'block';
             currentPlayerScore = null;
-            updateTopScoresDisplay();
+            
+            // Only update top scores display if the element exists
+            const topScoresList = document.getElementById('topScoresList');
+            if (topScoresList) {
+                updateTopScoresDisplay();
+            } else {
+                console.log('Top scores list is hidden or not available');
+            }
+            
             startButton.style.display = 'block';
             initialsInput.style.display = 'none';
             okButton.style.display = 'none'; // Ensure OK button is hidden on init
@@ -274,7 +305,6 @@
         function loadHighScores() {
             const savedScores = localStorage.getItem('snakeHighScores');
             highScores = savedScores ? JSON.parse(savedScores) : [];
-            updateTopScoresDisplay();
         }
 
         function saveHighScores() {
@@ -372,7 +402,8 @@
                     controlInstructions.style.display = 'none';
                     gameState = 'playing';
                     canvas.style.touchAction = 'none'; // Disable default touch actions
-                    setTimeout(gameLoop, updateInterval);
+                    loopCount = 0;
+                    requestAnimationFrame(gameLoop);
                 }
             }
 
@@ -380,7 +411,9 @@
         }
 
         function gameLoop() {
+
             if (gameState === 'playing') {
+                console.log('game loop', loopCount++);
                 clearCanvas();
                 processInputQueue();
                 moveSnake();
@@ -390,8 +423,7 @@
                 checkCollision();
                 drawScore();
                 updateTopScoresDisplay();
-
-                setTimeout(gameLoop, updateInterval);
+                setTimeout(() => requestAnimationFrame(gameLoop), updateInterval)
             }
         }
 
@@ -516,6 +548,13 @@
         }
 
         function updateTopScoresDisplay(gameOver = false) {
+            // Check if the topScoresList element exists
+            const topScoresList = document.getElementById('topScoresList');
+            if (!topScoresList) {
+                console.log('Top scores list is hidden or not available');
+                return; // Exit the function if the element doesn't exist
+            }
+
             topScoresList.innerHTML = '';
             let currentScoreInserted = false;
             let displayedScores = [...highScores];
@@ -561,28 +600,104 @@
         }
 
         function addTouchControls() {
-            canvas.addEventListener('touchstart', handleTouch, { passive: false });
+            let lastLeftTapTime = 0;
+            let lastRightTapTime = 0;
+            const tapThreshold = 250; // milliseconds
+            let touchCount = 0;
+
+            // Add the event listener to the document instead of the canvas
+            document.addEventListener('touchstart', handleTouch, false);
+            document.addEventListener('touchend', handleTouchEnd, false);
 
             function handleTouch(event) {
-                event.preventDefault(); // Prevent scrolling when touching the canvas
-                const touch = event.touches[0];
-                const canvasRect = canvas.getBoundingClientRect();
-                const touchX = touch.clientX - canvasRect.left;
+                touchCount++;
+                event.preventDefault();
+                const currentTime = new Date().getTime();
+                
+                // Use the last touch point
+                const touch = event.touches[event.touches.length - 1];
+                const screenWidth = window.innerWidth;
+                const touchX = touch.clientX;
+
+                logTouch(`Touch #${touchCount} - Start: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
 
                 if (gameState === 'playing') {
-                    if (touchX < canvas.width / 2) {
-                        inputQueue.push('left');
+                    if (touchX < screenWidth / 2) {
+                        // Left side touch
+                        const leftDiff = currentTime - lastLeftTapTime;
+                        logTouch(`  Left check: diff=${leftDiff}, threshold=${tapThreshold}`, currentTime);
+                        if (leftDiff > tapThreshold) {
+                            logTouch(`  Left action: Pushing 'left' to queue`, currentTime);
+                            if (inputQueue.length === 0 || inputQueue[inputQueue.length - 1] !== 'left') {
+                                inputQueue.push('left');
+                                logTouch(`    'left' added to queue`, currentTime);
+                            } else {
+                                logTouch(`    'left' not added (duplicate)`, currentTime);
+                            }
+                            lastLeftTapTime = currentTime;
+                            logTouch(`  Updated lastLeftTapTime: ${lastLeftTapTime}`, currentTime);
+                        } else {
+                            logTouch(`  Left action skipped (too soon)`, currentTime);
+                        }
                     } else {
-                        inputQueue.push('right');
+                        // Right side touch
+                        const rightDiff = currentTime - lastRightTapTime;
+                        logTouch(`  Right check: diff=${rightDiff}, threshold=${tapThreshold}`, currentTime);
+                        if (rightDiff > tapThreshold) {
+                            logTouch(`  Right action: Pushing 'right' to queue`, currentTime);
+                            if (inputQueue.length === 0 || inputQueue[inputQueue.length - 1] !== 'right') {
+                                inputQueue.push('right');
+                                logTouch(`    'right' added to queue`, currentTime);
+                            } else {
+                                logTouch(`    'right' not added (duplicate)`, currentTime);
+                            }
+                            lastRightTapTime = currentTime;
+                            logTouch(`  Updated lastRightTapTime: ${lastRightTapTime}`, currentTime);
+                        } else {
+                            logTouch(`  Right action skipped (too soon)`, currentTime);
+                        }
                     }
                 } else if (gameState === 'initial' || gameState === 'gameover') {
+                    logTouch(`  Game not playing, starting game`, currentTime);
                     startGame();
                 }
+
+                logTouch(`Touch #${touchCount} - End: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
+                logTouch(`Current inputQueue: ${JSON.stringify(inputQueue)}`, currentTime);
+            }
+
+            function handleTouchEnd(event) {
+                // Reset lastLeftTapTime and lastRightTapTime when all fingers are lifted
+                if (event.touches.length === 0) {
+                    lastLeftTapTime = 0;
+                    lastRightTapTime = 0;
+                    logTouch('All touches ended, reset tap times', new Date().getTime());
+                }
+            }
+
+            // Add this function at the beginning of your script, outside any other function
+            function getCurrentTimestamp() {
+                return new Date().toISOString().split('T')[1].slice(0, -1);
+            }
+
+            // Modify the logTouch function
+            function logTouch(message, timestamp) {
+                const formattedTimestamp = getCurrentTimestamp();
+                const logEntry = `${formattedTimestamp} - ${message}`;
+                
+                const li = document.createElement('li');
+                li.textContent = logEntry;
+                touchLogList.insertBefore(li, touchLogList.firstChild);
+                
+                // Keep only the last 50 entries
+                while (touchLogList.children.length > 50) {
+                    touchLogList.removeChild(touchLogList.lastChild);
+                }
+
+                // Also log to console for easier debugging
+                console.log(logEntry);
             }
         }
-
-        // Call this function after initializing the game
-        addTouchControls();
 
         document.addEventListener('keydown', (e) => {
             if ((gameState === 'initial' || gameState === 'gameover') && e.code === 'Space') {
