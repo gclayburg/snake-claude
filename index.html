@@ -67,8 +67,9 @@
         }
 
         #touchLog {
-            width: 100%; /* Full width of the side panel */
-            margin-top: 0; /* Remove top margin as it's now below the game area */
+            display: none; /* Hide by default */
+            width: 100%;
+            margin-top: 20px;
             background-color: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 10px;
@@ -77,6 +78,10 @@
             text-align: left;
             max-height: 200px;
             overflow-y: auto;
+        }
+
+        #touchLog.show {
+            display: block; /* Show when this class is present */
         }
 
         #touchLog h3 {
@@ -288,12 +293,12 @@
             controlInstructions.style.display = 'block';
             currentPlayerScore = null;
             
-            // Only update top scores display if the element exists
-            const topScoresList = document.getElementById('topScoresList');
-            if (topScoresList) {
-                updateTopScoresDisplay();
+            // Check if touch log should be shown
+            const touchLog = document.getElementById('touchLog');
+            if (shouldShowTouchLog()) {
+                touchLog.classList.add('show');
             } else {
-                console.log('Top scores list is hidden or not available');
+                touchLog.classList.remove('show');
             }
             
             startButton.style.display = 'block';
@@ -682,6 +687,8 @@
 
             // Modify the logTouch function
             function logTouch(message, timestamp) {
+                if (!shouldShowTouchLog()) return; // Exit if touch log shouldn't be shown
+
                 const formattedTimestamp = getCurrentTimestamp();
                 const logEntry = `${formattedTimestamp} - ${message}`;
                 
@@ -698,6 +705,19 @@
                 console.log(logEntry);
             }
         }
+
+        function shouldShowTouchLog() {
+            return window.location.hash === '#showtouchlog';
+        }
+
+        window.addEventListener('hashchange', function() {
+            const touchLog = document.getElementById('touchLog');
+            if (shouldShowTouchLog()) {
+                touchLog.classList.add('show');
+            } else {
+                touchLog.classList.remove('show');
+            }
+        });
 
         document.addEventListener('keydown', (e) => {
             if ((gameState === 'initial' || gameState === 'gameover') && e.code === 'Space') {
