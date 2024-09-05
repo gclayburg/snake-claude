@@ -211,6 +211,12 @@
         button, input {
             touch-action: auto;
         }
+
+        #enterInitialsText {
+            color: red;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 
@@ -220,6 +226,7 @@
             <canvas id="gameCanvas" width="404" height="404"></canvas>
             <div id="gameOverlay">
                 <p id="overlayText"></p>
+                <p id="enterInitialsText"></p>
                 <div id="initialsInputContainer">
                     <input type="text" id="initialsInput" maxlength="3" autocomplete="off" placeholder="___" />
                     <button id="okButton" disabled>OK</button>
@@ -227,7 +234,7 @@
                 <p id="currentScore"></p>
                 <p id="highScore"></p>
             </div>
-            <button id="startButton">Press space bar to start</button>
+            <button id="startButton">Start</button>
             <div id="controlInstructions"></div>
         </div>
         <div id="sidePanel">
@@ -301,9 +308,11 @@
                 touchLog.classList.remove('show');
             }
             
+            startButton.textContent = 'Start';
             startButton.style.display = 'block';
             initialsInput.style.display = 'none';
             okButton.style.display = 'none'; // Ensure OK button is hidden on init
+            document.getElementById('enterInitialsText').style.display = 'none';
             addTouchControls();
         }
 
@@ -332,18 +341,33 @@
 
             if (isNewHighScore) {
                 overlayText.textContent = `New high score #${isNewHighScore}!`;
+                document.getElementById('enterInitialsText').textContent = 'Enter Initials:';
+                document.getElementById('enterInitialsText').style.display = 'block';
                 initialsInput.value = '';
                 initialsInput.placeholder = '___';
                 initialsInput.style.display = 'block';
                 okButton.style.display = 'inline-block';
                 okButton.disabled = true;
                 currentInitials = '';
+                
+                // Set focus to the initials input and move cursor to the start
+                setTimeout(() => {
+                    initialsInput.focus();
+                    initialsInput.setSelectionRange(0, 0);
+                }, 0);
+
+                // Disable start button until initials are entered and OK is pressed
+                startButton.disabled = true;
+                startButton.style.display = 'none'; // Hide start button when entering initials
+                controlInstructions.style.display = 'none'; // Hide control instructions
             } else {
                 showHighScores();
+                startButton.disabled = false;
+                startButton.style.display = 'block';
+                document.getElementById('enterInitialsText').style.display = 'none';
+                controlInstructions.style.display = 'block'; // Show control instructions
             }
             overlay.style.display = 'flex';
-            controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
-            controlInstructions.style.display = 'block';
         }
 
         function checkNewHighScore(score) {
@@ -358,13 +382,14 @@
 
         function showHighScores() {
             overlayText.textContent = 'Game Over!';
+            document.getElementById('enterInitialsText').style.display = 'none';
             initialsInput.style.display = 'none';
             okButton.style.display = 'none';
             currentScoreElement.textContent = `Your score: ${score}`;
             highScoreElement.textContent = '';
-            startButton.textContent = 'Tap to restart';
+            startButton.textContent = 'Play again';
             startButton.style.display = 'block';
-            controlInstructions.style.display = 'block';
+            controlInstructions.style.display = 'block'; // Show control instructions
         }
 
         function startGame() {
@@ -615,18 +640,27 @@
             document.addEventListener('touchend', handleTouchEnd, false);
 
             function handleTouch(event) {
-                touchCount++;
-                event.preventDefault();
-                const currentTime = new Date().getTime();
+                event.preventDefault(); // Prevent default for all touches
                 
-                // Use the last touch point
-                const touch = event.touches[event.touches.length - 1];
-                const screenWidth = window.innerWidth;
-                const touchX = touch.clientX;
+                // Check if the touch is on the initials input
+                if (isNewHighScore && event.target === initialsInput) {
+                    // Allow the default behavior for the initials input
+                    event.stopPropagation();
+                    return;
+                }
 
-                logTouch(`Touch #${touchCount} - Start: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
-
+                // Only process touches if the game is playing
                 if (gameState === 'playing') {
+                    touchCount++;
+                    const currentTime = new Date().getTime();
+                    
+                    // Use the last touch point
+                    const touch = event.touches[event.touches.length - 1];
+                    const screenWidth = window.innerWidth;
+                    const touchX = touch.clientX;
+
+                    logTouch(`Touch #${touchCount} - Start: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
+
                     if (touchX < screenWidth / 2) {
                         // Left side touch
                         const leftDiff = currentTime - lastLeftTapTime;
@@ -662,13 +696,10 @@
                             logTouch(`  Right action skipped (too soon)`, currentTime);
                         }
                     }
-                } else if (gameState === 'initial' || gameState === 'gameover') {
-                    logTouch(`  Game not playing, starting game`, currentTime);
-                    startGame();
-                }
 
-                logTouch(`Touch #${touchCount} - End: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
-                logTouch(`Current inputQueue: ${JSON.stringify(inputQueue)}`, currentTime);
+                    logTouch(`Touch #${touchCount} - End: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
+                    logTouch(`Current inputQueue: ${JSON.stringify(inputQueue)}`, currentTime);
+                }
             }
 
             function handleTouchEnd(event) {
@@ -819,17 +850,32 @@
             }
         });
 
-        okButton.addEventListener('click', function () {
+        okButton.addEventListener('click', () => {
             if (currentInitials.length === 3) {
-                submitHighScore();
+                addHighScore(score, currentInitials);
+                showHighScores();
+                isNewHighScore = false;
+                initialsInput.style.display = 'none';
+                okButton.style.display = 'none';
+                startButton.disabled = false; // Enable start button after OK is pressed
             }
         });
 
         startButton.addEventListener('click', () => {
-            if (gameState === 'initial' || gameState === 'gameover') {
+            if ((gameState === 'initial' || gameState === 'gameover') && !isNewHighScore && !startButton.disabled) {
                 startGame();
             }
         });
+
+        // Add this function to handle initials input on touch devices
+        function handleInitialsInput(event) {
+            event.preventDefault();
+            initialsInput.focus();
+        }
+
+        // Add touch event listeners for the initials input
+        initialsInput.addEventListener('touchstart', handleInitialsInput, false);
+        initialsInput.addEventListener('touchend', handleInitialsInput, false);
 
         initGame(); // Call this at the end of the script
     </script>
