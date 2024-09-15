@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            -ms-touch-action: none;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            display: block;
+            position: absolute;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(211, 211, 211, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #overlay-message {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        #start-button {
+            padding: 10px 20px;
+            font-size: 24px;
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="overlay">
+        <div id="overlay-message">Snake!</div>
+        <button id="start-button">Start</button>
+    </div>
+    <div id="score">Score: 0</div>
+</div>
+
+<script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const overlayMessage = document.getElementById('overlay-message');
+    const startButton = document.getElementById('start-button');
+    const scoreElement = document.getElementById('score');
+
+    const GRID_SIZE = 20;
+    let cellSize;
+    const borderWidth = 5;
+
+    let snake = [];
+    let snakeDirection = 0; // 0: up, 1: right, 2: down, 3: left
+    let snakeTurns = [];
+
+    let food = { x: 0, y: 0 };
+
+    let score = 0;
+    let gameInterval;
+    let gameState = 'init'; // 'init', 'countdown', 'playing', 'gameover'
+
+    function resizeCanvas() {
+        let windowWidth = window.innerWidth;
+        let windowHeight = window.innerHeight;
+
+        // Maintain aspect ratio
+        let size = Math.min(windowWidth, windowHeight);
+
+        canvas.width = size;
+        canvas.height = size;
+
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+
+        // Center the canvas
+        canvas.style.left = ((windowWidth - size) / 2) + 'px';
+        canvas.style.top = ((windowHeight - size) / 2) + 'px';
+
+        updateCellSize();
+        drawGame();
+    }
+
+    function updateCellSize() {
+        cellSize = (canvas.width - 2 * borderWidth) / GRID_SIZE;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    startButton.addEventListener('click', startGame);
+
+    document.addEventListener('keydown', (e) => {
+        if (gameState === 'init' || gameState === 'gameover') {
+            if (e.code === 'Space') {
+                startGame();
+            }
+        } else if (gameState === 'playing') {
+            if (e.code === 'ArrowLeft') {
+                turnSnake('left');
+            } else if (e.code === 'ArrowRight') {
+                turnSnake('right');
+            }
+        }
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+        if (gameState === 'playing') {
+            let touch = e.touches[0];
+            let rect = canvas.getBoundingClientRect();
+            let x = touch.clientX - rect.left;
+
+            if (x < canvas.width / 2) {
+                turnSnake('left');
+            } else {
+                turnSnake('right');
+            }
+
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Prevent scrolling during game play
+    window.addEventListener('touchmove', function(e) {
+        if (gameState === 'playing') {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    function startGame() {
+        overlay.style.display = 'none';
+        overlayMessage.textContent = '';
+        startButton.style.display = 'none';
+
+        // Start the countdown
+        gameState = 'countdown';
+        let countdownMessages = ['Ready', 'Set', 'Go!'];
+        let index = 0;
+
+        function showCountdown() {
+            if (index < countdownMessages.length) {
+                overlay.style.display = 'flex';
+                overlayMessage.textContent = countdownMessages[index];
+                startButton.style.display = 'none';
+                index++;
+                setTimeout(showCountdown, 1000);
+            } else {
+                overlay.style.display = 'none';
+                initGame();
+            }
+        }
+        showCountdown();
+    }
+
+    function initGame() {
+        gameState = 'playing';
+        score = 0;
+        scoreElement.textContent = 'Score: ' + score;
+
+        // Initialize snake
+        snake = [];
+        let startX = Math.floor(GRID_SIZE / 2);
+        let startY = GRID_SIZE - 1;
+        snake.push({ x: startX, y: startY });
+
+        snakeDirection = 0; // moving upwards
+        snakeTurns = [];
+
+        // Place food
+        placeFood();
+
+        // Start game loop
+        gameInterval = setInterval(gameLoop, 150);
+    }
+
+    function placeFood() {
+        do {
+            food.x = Math.floor(Math.random() * GRID_SIZE);
+            food.y = Math.floor(Math.random() * GRID_SIZE);
+        } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+    }
+
+    function turnSnake(direction) {
+        snakeTurns.push(direction);
+    }
+
+    function gameLoop() {
+        // Update snake direction based on turns
+        if (snakeTurns.length > 0) {
+            let turn = snakeTurns.shift();
+            if (turn === 'left') {
+                snakeDirection = (snakeDirection + 3) % 4; // Turn left
+            } else if (turn === 'right') {
+                snakeDirection = (snakeDirection + 1) % 4; // Turn right
+            }
+        }
+
+        // Calculate new head position
+        let head = { ...snake[0] };
+        if (snakeDirection === 0) {
+            head.y -= 1;
+        } else if (snakeDirection === 1) {
+            head.x += 1;
+        } else if (snakeDirection === 2) {
+            head.y += 1;
+        } else if (snakeDirection === 3) {
+            head.x -= 1;
+        }
+
+        // Check for collisions
+        if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE ||
+            snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+            gameOver();
+            return;
+        }
+
+        // Add new head to the snake
+        snake.unshift(head);
+
+        // Check for food collision
+        if (head.x === food.x && head.y === food.y) {
+            score += 1;
+            scoreElement.textContent = 'Score: ' + score;
+            placeFood();
+        } else {
+            // Remove tail
+            snake.pop();
+        }
+
+        drawGame();
+    }
+
+    function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw border
+        ctx.lineWidth = borderWidth;
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(borderWidth / 2, borderWidth / 2, canvas.width - borderWidth, canvas.height - borderWidth);
+
+        // Draw snake
+        ctx.fillStyle = 'green';
+        for (let segment of snake) {
+            ctx.fillRect(
+                segment.x * cellSize + borderWidth,
+                segment.y * cellSize + borderWidth,
+                cellSize,
+                cellSize
+            );
+        }
+
+        // Draw food
+        ctx.fillStyle = 'red';
+        ctx.fillRect(
+            food.x * cellSize + borderWidth,
+            food.y * cellSize + borderWidth,
+            cellSize,
+            cellSize
+        );
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        gameState = 'gameover';
+
+        overlay.style.display = 'flex';
+        overlayMessage.textContent = 'Game Over!';
+        startButton.textContent = 'Restart';
+        startButton.style.display = 'block';
+    }
+</script>
+</body>
+</html>
