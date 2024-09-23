@@ -1,0 +1,222 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: green;
+    font-family: Arial, sans-serif;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+#game {
+    width: 100%;
+    height: 100vh;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#top-row {
+    display: flex;
+    justify-content: space-between; /* Changed from flex-start to space-between */
+    align-items: flex-start;
+    margin-bottom: 30px; /* Increased from 20px to 30px */
+}
+
+.pile {
+    width: 80px;
+    height: 120px;
+    margin-right: 20px;
+    position: relative;
+}
+
+/* Add these new styles for the stock pile */
+#stock {
+    height: 120px; /* Return to full height */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+}
+
+#stock .card {
+    position: absolute;
+    margin-top: 0;
+}
+
+/* Add this new rule to create a more pronounced stack effect */
+#stock .card:nth-child(n+2) {
+    margin-top: 1px; /* Adjust this value to create the desired stack effect */
+}
+
+/* Limit the visual stack to 24 cards (initial stock count) */
+#stock .card:nth-child(n+25) {
+    display: none;
+}
+
+/* Add this new rule for empty stock pile */
+#stock:empty {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove the #stock-count styles as we won't be using it anymore */
+
+#foundations {
+    display: flex;
+    margin-left: auto; /* Changed from 20px to auto */
+    gap: 10px; /* Add space between foundation piles */
+}
+
+.foundation {
+    width: 80px;
+    height: 120px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Light border for empty foundation spots */
+    border-radius: 5px; /* Optional: adds slightly rounded corners */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: adds a subtle inner shadow */
+}
+
+.tableau {
+    display: flex;
+}
+
+#tableau {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    margin-top: 50px; /* Add this line to create the gap */
+}
+
+.tableau-pile {
+    width: 80px;
+    height: 120px; /* Changed from min-height to height, matching card height */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    position: relative; /* Added to ensure proper stacking context */
+}
+
+.card {
+    width: 80px;
+    height: 120px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: grab;
+    user-select: none;
+}
+
+/* Add this new rule for card backs */
+.card[src$="back.png"] {
+    border: 1px solid black;
+}
+
+.card.dragging {
+    opacity: 0.5;
+    position: absolute;
+    z-index: 1000;
+}
+
+.hidden {
+    display: none;
+}
+
+/* More specific selector to override #game-over display property */
+#game-over.hidden {
+    display: none;
+}
+
+#game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pile {
+        width: 60px;
+        height: 90px;
+        margin-right: 10px;
+    }
+
+    .card {
+        width: 60px;
+        height: 90px;
+    }
+
+    /* Add this rule for responsive card backs */
+    .card[src$="back.png"] {
+        border: 1px solid black;
+    }
+
+    #foundations {
+        margin-left: 10px;
+        gap: 5px; /* Reduce gap for smaller screens */
+    }
+
+    #top-row {
+        margin-bottom: 20px; /* Adjust for smaller screens */
+    }
+
+    .foundation {
+        width: 60px;
+        height: 90px;
+    }
+
+    .tableau-pile {
+        width: 60px;
+        height: 90px; /* Adjusted to match card height on smaller screens */
+    }
+
+    .tableau-pile::after {
+        height: 30px;
+        top: 90px; /* Adjusted for smaller card height */
+    }
+
+    #stock {
+        height: 90px; /* Adjust for smaller screens */
+    }
+
+    #stock .card:nth-child(n+2) {
+        margin-top: 0.75px; /* Slightly reduce the stack effect for smaller screens */
+    }
+
+    /* Remove any #stock-specific styles that are no longer needed */
+
+    /* Add this for responsive empty stock pile */
+    #stock:empty {
+        width: 60px;
+        height: 90px;
+    }
+}
+
+.game-area {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    /* Add any other styles you want for the game area */
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klondike Solitaire</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="game" class="game-area"> <!-- Add this wrapper div -->
+    <div id="top-row">
+        <div id="stock" class="pile" data-pile="stock">
+            <img src="images/back.png" alt="Stock" class="card">
+        </div>
+        <div id="waste" class="pile" data-pile="waste"></div>
+        <div id="foundations">
+            <div class="foundation pile" data-pile="foundation-1"></div>
+            <div class="foundation pile" data-pile="foundation-2"></div>
+            <div class="foundation pile" data-pile="foundation-3"></div>
+            <div class="foundation pile" data-pile="foundation-4"></div>
+        </div>
+    </div>
+    <div id="tableau">
+        <div class="tableau-pile pile" data-pile="tableau-1"></div>
+        <div class="tableau-pile pile" data-pile="tableau-2"></div>
+        <div class="tableau-pile pile" data-pile="tableau-3"></div>
+        <div class="tableau-pile pile" data-pile="tableau-4"></div>
+        <div class="tableau-pile pile" data-pile="tableau-5"></div>
+        <div class="tableau-pile pile" data-pile="tableau-6"></div>
+        <div class="tableau-pile pile" data-pile="tableau-7"></div>
+    </div>
+</div>
+
+<!-- Modal for Game Over -->
+<div id="game-over" class="hidden">
+    <div class="modal-content">
+        <h2>Congratulations!</h2>
+        <p>You have won the game.</p>
+        <button id="restart-button">Restart</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
