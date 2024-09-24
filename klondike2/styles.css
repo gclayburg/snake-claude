@@ -1,0 +1,116 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: green;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#game-container {
+    width: 90vw;
+    height: 90vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.pile {
+    width: 80px;
+    height: 110px;
+    margin: 10px;
+    position: relative;
+}
+
+#top-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+#score {
+    margin-left: 20px;
+    font-size: 20px;
+    color: white;
+}
+
+.foundations {
+    display: flex;
+    margin-left: auto;
+}
+
+#tableau-piles {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+}
+
+.tableau {
+    width: 80px;
+    height: 500px; /* Adjust as needed */
+}
+
+.card {
+    width: 80px;
+    height: 110px;
+    position: absolute;
+    cursor: grab;
+}
+
+.card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.empty-pile {
+    width: 80px;
+    height: 110px;
+}
+
+#game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-over.hidden {
+    display: none;
+}
+
+#game-over-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    /* Adjust sizes for mobile */
+    .pile {
+        width: 60px;
+        height: 82px;
+    }
+    
+    .card {
+        width: 60px;
+        height: 82px;
+    }
+    
+    #score {
+        font-size: 16px;
+    }
+}

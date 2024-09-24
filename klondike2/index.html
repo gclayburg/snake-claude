@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Klondike Solitaire</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Top Row: Stock, Waste, Score, Foundations -->
+        <div id="top-row">
+            <div class="pile" data-pile="stock"></div>
+            <div class="pile" data-pile="waste"></div>
+            <div id="score">Score: 0</div>
+            <div class="foundations">
+                <div class="pile foundation" data-pile="foundation-1"></div>
+                <div class="pile foundation" data-pile="foundation-2"></div>
+                <div class="pile foundation" data-pile="foundation-3"></div>
+                <div class="pile foundation" data-pile="foundation-4"></div>
+            </div>
+        </div>
+        
+        <!-- Tableau Piles -->
+        <div id="tableau-piles">
+            <div class="pile tableau" data-pile="tableau-1"></div>
+            <div class="pile tableau" data-pile="tableau-2"></div>
+            <div class="pile tableau" data-pile="tableau-3"></div>
+            <div class="pile tableau" data-pile="tableau-4"></div>
+            <div class="pile tableau" data-pile="tableau-5"></div>
+            <div class="pile tableau" data-pile="tableau-6"></div>
+            <div class="pile tableau" data-pile="tableau-7"></div>
+        </div>
+        
+        <!-- Game Over Modal -->
+        <div id="game-over" class="hidden">
+            <div id="game-over-content">
+                <h1>Congratulations! You have won the game!</h1>
+                <button id="restart-button">Restart Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include the JavaScript file -->
+    <script src="script.js"></script>
+</body>
+</html>
