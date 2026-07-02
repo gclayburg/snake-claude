@@ -1,0 +1,191 @@
+i have a 52 card deck of regular playing cards.  We will eventually be building this game to be playable in the browser, but we will not be writing runnable code just yet.
+
+====
+I have an existing React/ next.js development project that uses TypeScript.  We will use this project as a starting point.  Your task is to create a product requirements document (PRD) for this project.  We will give this document to a developer who will build the project.
+
+Here are the rules to follow:
+
+You will use the normal rules of klondike solitaire game with these clarifications:
+When the user draws cards from the stock, they will always draw 3 cards and flip them over on to the waste pile.
+In this way, the 3rd card now shows on top of the waste pile and is the only playable card.
+If that top card is played, then the next card in the waste pile can be played, and so on.
+If the stock is exhausted, the player can turn the entire waste pile back into the stock by flipping the entire waste pile over and begin taking 3 cards from the stock as described above.
+This can be done repeatedly until there are no more moves.
+
+Your goal is to create a playable game in the browser that is usable on both the desktop and mobile devices.  If the browser screen is resized, the entire game area should automatically resize to fit the new size of the screen.  When the screen is resized it is important to scale the size of the card images.  The images we are using - described below - are scalable.  We only need to scale the width component.  The height adjusts automatically.
+On desktop, the game should be playable with the user using a mouse to select and drag cards to the new location.  The game must determine if the place the card is dropped is legal according to the game rules.
+We will consider the move a legal move if any part of the card being dragged overlaps with the destination area.  If it is a legal move, the game should update the game state to reflect the move and display all cards correctly.  Please note, it is not enough to only consider where the mouse pointer currently is when determining when a drop is valid.  We must consider the length and width of the card being moved, relative to the mouse position.
+
+If the move is not legal, the game must return the card or sequence of cards being moved to the starting location.
+On mobile, the user will use single touch to select and drag the card or sequence of cards.  multi-touch gestures will not be used.  other browser controls on mobile should also be disabled to avoid any distractions like scrolling and multi-touch.
+If the user does a double click on desktop or a double tap on mobile on a playable card, the game will check to see if the card is playable on a foundation pile.
+If it is playable there, the game will automatically move it without the player needing to drag the card, although they can if they prefer to.
+
+Visually you will place the stock pile in the top left corner.  To the right of that you will show top 3 cards of the waste pile.  Only the very top card will be completely visible.  The other 2 will only show the suit and the rank.
+To the right of this will be the 4 foundation piles.  The foundation piles should be placed on the right edge of the playing area.
+Below this top row will be the 7 piles making up the Tableau.
+Part of your task is to determine, according to the rules, which cards can be selected and moved.
+
+===
+
+Initial layout
+The initial layout to draw will be based on the width and height of the browser window.  You will need to adjust the width of the card images as needed.  We don't want large areas of background between the stacks in the tableau, for example.  We want a fixed gap between the card piles.  We also need to ensure that the rank and suit of cards are always visible.
+
+Moving card piles.
+It is important that when a user moves one pile of cards to another location, that visually the user sees that the card or cards are not shown in the original location at all.  Rather, they will show being dragged as a group to the new location.
+If the new location is valid, then they are added to the new location.  If the location is not valid, then the cards are returned to their original location.
+
+If the user drags a group of cards from a tableau pile, the game will show the entire group of cards being moved and not just a single card that was selected.
+
+Dropping card piles.
+
+The game will try to be lenient when determining if a drop is legal or not.  This means that the game should not only check to see if the mouse location is directly over a valid target, but also if the mouse location is over any card or pile of cards that is part of a valid target.
+In addition, the game should consider the entire screen area occupied by the pile of cards being moved as the source.  For example, if the user is dragging just one card and the card is 80x110 pixels, then that entire 80x110 area should be considered as the source.
+If any part of that 80x110 area is over a valid target, then the game should consider the drop to match that target.  The game can then determine if the drop is legal.  Note, these dimensions are only a guess.  Part of the creation task is to determine the correct size.
+Also, we can further relax the matching rules for the tableau pile drop zone area.  This zone should not only include the height and width of the top card of the pile, but also the entire height of the tableau pile, including the face down cards and an infinitely long length of face up cards.
+The goal here is to make it easier for the player to make a correct match and not be picky about which part of the pile they are dropping on.
+
+When moving cards, the game should not try to change the opacity of the cards.  The cards should always appear solid and opaque.
+
+When moving cards, the game should try to avoid any screen flicker.  The cards should appear to move as a solid block, even if the actual HTML elements are moving piecemeal.
+
+When a pile is empty, the game should not show the back of the card.  Instead, it should show the empty pile in pleasing way to indicate that cards can be added to that pile.
+
+When the back of the card is shown, it needs to be surrounded by a very thin black border so the user can see that the card is actually there.
+
+In the tableau piles, the face down cards should be separated by an appropriate number of pixels so that the user can approximately see how many face down cards there are, without wasting vertical space.
+
+The images necessary for this game will be supplied for you in a folder called cards.  The naming convention for the images are:
+AS.svg
+AH.svg
+AD.svg
+AC.svg
+2S.svg
+2H.svg
+2D.svg
+2C.svg
+...
+10S.svg
+10H.svg
+10D.svg
+10C.svg
+JS.svg
+JH.svg
+JD.svg
+
+
+There are 52 images for the cards, one for each combination of rank and suit.  In addition, there is one image for the back of the card.  It is named BLUE_BACK.svg.
+
+At the beginning of the game, the stock pile will have 24 cards and the waste pile will have 3 cards.  The remaining cards will be in the stock.
+
+The game starts with a score of 0.  Each time the user plays a card on a foundation pile, the game score will increase by 1 point.  The game score should be displayed in a pleasing font just to the right of the waste pile.
+
+# Current directory layout of the project
+
+
+$ tree  -I node_modules --gitignore
+.
+├── components.json
+├── next.config.mjs
+├── package.json
+├── package-lock.json
+├── postcss.config.mjs
+├── public
+│   └── cards
+│       ├── 10C.svg
+│       ├── 10D.svg
+│       ├── 10H.svg
+│       ├── 10S.svg
+│       ├── 2C.svg
+│       ├── 2D.svg
+│       ├── 2H.svg
+│       ├── 2S.svg
+│       ├── 3C.svg
+│       ├── 3D.svg
+│       ├── 3H.svg
+│       ├── 3S.svg
+│       ├── 4C.svg
+│       ├── 4D.svg
+│       ├── 4H.svg
+│       ├── 4S.svg
+│       ├── 5C.svg
+│       ├── 5D.svg
+│       ├── 5H.svg
+│       ├── 5S.svg
+│       ├── 6C.svg
+│       ├── 6D.svg
+│       ├── 6H.svg
+│       ├── 6S.svg
+│       ├── 7C.svg
+│       ├── 7D.svg
+│       ├── 7H.svg
+│       ├── 7S.svg
+│       ├── 8C.svg
+│       ├── 8D.svg
+│       ├── 8H.svg
+│       ├── 8S.svg
+│       ├── 9C.svg
+│       ├── 9D.svg
+│       ├── 9H.svg
+│       ├── 9S.svg
+│       ├── AC.svg
+│       ├── AD.svg
+│       ├── AH.svg
+│       ├── AS.svg
+│       ├── AUTHORS.txt
+│       ├── BLUE_BACK.svg
+│       ├── CHANGELOG.txt
+│       ├── COPYING.LESSER.txt
+│       ├── COPYING.txt
+│       ├── JC.svg
+│       ├── JD.svg
+│       ├── JH.svg
+│       ├── JS.svg
+│       ├── KC.svg
+│       ├── KD.svg
+│       ├── KH.svg
+│       ├── KS.svg
+│       ├── NEWS.txt
+│       ├── QC.svg
+│       ├── QD.svg
+│       ├── QH.svg
+│       ├── QS.svg
+│       ├── readme.txt
+│       ├── RED_BACK.svg
+│       ├── TC.svg
+│       ├── TD.svg
+│       ├── TH.svg
+│       └── TS.svg
+├── README.md
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── fonts
+│   │   │   ├── GeistMonoVF.woff
+│   │   │   └── GeistVF.woff
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── game-room.tsx
+│   │   └── ui
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       └── input.tsx
+│   └── lib
+│       └── utils.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+8 directories, 83 files
+
+
+======
+Above is the project I want to build. How should I structure the project files needed?
+Try to create as few files as possible.
+Help me organize this document in a clear way.  I want to be able to give this document to the development team that
+will build this project.
+- don't create the actual full code, just the PRD
+- include the file structure into the doc
+- include all documentation needed
+

@@ -1,30 +1,24 @@
-i have a 52 card deck of regular playing cards.  can you tell me in detail the rules of the game for classic klondike solitaire
-
-====
-Your task is to write the complete javascript code for the game of klondike solitaire starting from scratch.
-====
-I have an existing React development project that uses TypeScript.  Your task is to write the complete Typescript React component code for the game of klondike solitaire starting from scratch.
-Here are the rules to follow:
+Your task is to write the complete javascript code for the game of klondike solitaire starting from scratch. Here are the rules to follow:
 
 You will use your prior description of klondike solitaire game with these clarifications:
-When the user draws cards from the stock, they will always draw 3 cards and flip them over on to the waste pile.
-In this way, the 3rd card now shows on top of the waste pile and is the only playable card.
+When the user draws cards from the stock, they will always draw 3 cards and flip them over on to the waste pile.  
+In this way, the 3rd card now shows on top of the waste pile and is the only playable card.  
 If that top card is played, then the next card in the waste pile can be played, and so on.
 If the stock is exhausted, the player can turn the entire waste pile back into the stock by flipping the entire waste pile over and begin taking 3 cards from the stock as described above.
 This can be done repeatedly until there are no more moves.
 
 Your goal is to create a playable game in the browser that is usable on both the desktop and mobile devices.  If the browser screen is resized, the entire game area should automatically resize to fit the new size of the screen.
-On desktop, the game should be playable with the user using a mouse to select and drag cards to the new location.  The game must determine if the place the card is dropped is legal according to the game rules.
+On desktop, the game should be playable with the user using a mouse to select and drag cards to the new location.  The game must determine if the place the card is dropped is legal according to the game rules.  
 We will consider the move a legal move if any part of the card being dragged overlaps with the destination area.  If it is a legal move, the game should update the game state to reflect the move and display all cards correctly.
 If the move is not legal, the game must return the card or sequence of cards being moved to the starting location.
 On mobile, the user will use single touch to select and drag the card or sequence of cards.  multi-touch gestures will not be used.  other browser controls on mobile should also be disabled to avoid any distractions like scrolling and multi-touch.
-If the user does a double click on desktop or a double tap on mobile on a playable card, the game will check to see if the card is playable on a foundation pile.
+If the user does a double click on desktop or a double tap on mobile on a playable card, the game will check to see if the card is playable on a foundation pile.  
 If it is playable there, the game will automatically move it without the player needing to drag the card, although they can if they prefer to.
 
 Visually you will place the stock pile in the top left corner.  To the right of that you will show top 3 cards of the waste pile.  Only the very top card will be completely visible.  The other 2 will only show the suit and the rank.
 To the right of this will be the 4 foundation piles.  The foundation piles should be placed on the right edge of the playing area.
-Below this top row will be the 7 piles making up the Tableau.
-Part of your task is to determine, according to the rules, which cards can be selected and moved.
+Below this top row will be the 7 piles making up the Tableau.  
+Part of your task is to determine, according to the rules, which cards can be selected and moved.  
 
 ===
 
@@ -36,8 +30,8 @@ If the user drags a group of cards from a tableau pile, the game will show the e
 
 Dropping card piles.
 
-The game will try to be lenient when determining if a drop is legal or not.  This means that the game should not only check to see if the mouse location is directly over a valid target, but also if the mouse location is over any card or pile of cards that is part of a valid target.
-In addition, the game should consider the entire screen area occupied by the pile of cards being moved as the source.  For example, if the user is dragging just one card and the card is 80x110 pixels, then that entire 80x110 area should be considered as the source.
+The game will try to be lenient when determining if a drop is legal or not.  This means that the game should not only check to see if the mouse location is directly over a valid target, but also if the mouse location is over any card or pile of cards that is part of a valid target.  
+In addition, the game should consider the entire screen area occupied by the pile of cards being moved as the source.  For example, if the user is dragging just one card and the card is 80x110 pixels, then that entire 80x110 area should be considered as the source.  
 If any part of that 80x110 area is over a valid target, then the game should consider the drop to match that target.  The game can then determine if the drop is legal.
 Also, we can further relax the matching rules for the tableau pile drop area.  This area should not only include the height and width of the top card of the pile, but also the entire height of the tableau pile, including the face down cards and an infinitely long length of face up cards.
 The goal here is to make it easier for the player to make a correct match and not be picky about which part of the pile they are dropping on.
@@ -76,3 +70,10 @@ There are 52 images for the cards, one for each combination of rank and suit.  I
 At the beginning of the game, the stock pile will have 24 cards and the waste pile will have 3 cards.  The remaining cards will be in the stock.
 
 The game starts with a score of 0.  Each time the user plays a card on a foundation pile, the game score will increase by 1 point.  The game score should be displayed in a pleasing font just to the right of the waste pile.
+===
+Now, in addition to the regular game of solitaire, we are going to add a little twist to make this game multi player.
+We will need a start page that uses tailwind css to allow the user to enter their name next to a button to a button labeled ok.  
+
+When the game starts, the user should see their name displayed in a nice font in place of the score area.  For example for a user named Bob it should say "Bob: 0" 
+for an initial score of 0.
+We will allow a maximum of 4 players to play the game.

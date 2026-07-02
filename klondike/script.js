@@ -314,25 +314,41 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {DragEvent} e - The drag event
      */
     function handleDrop(e) {
-        console.log("Try handleDrop");
         e.preventDefault();
-        e.stopPropagation(); // Add this line to prevent the event from bubbling up to the game area
+        e.stopPropagation();
         if (!dragData) return;
 
-        const destinationPileId = e.currentTarget.dataset.pile;
+        const droppedElement = e.target;
+        const rect = droppedElement.getBoundingClientRect();
+        const dropX = e.clientX - rect.left;
+        const dropY = e.clientY - rect.top;
+
+        // Find all potential drop targets
+        const potentialTargets = document.elementsFromPoint(e.clientX, e.clientY)
+            .filter(el => el.classList.contains('pile'));
+
+        let destinationPileId = null;
+
+        // If there are potential targets, choose the leftmost one
+        if (potentialTargets.length > 0) {
+            destinationPileId = potentialTargets.reduce((leftmost, current) => {
+                const leftmostRect = leftmost.getBoundingClientRect();
+                const currentRect = current.getBoundingClientRect();
+                return currentRect.left < leftmostRect.left ? current : leftmost;
+            }).dataset.pile;
+        }
+
         console.log(`Drop attempted on ${destinationPileId} with cards:`, dragData.cards);
 
-        if (isLegalMove(dragData, destinationPileId)) {
+        if (destinationPileId && isLegalMove(dragData, destinationPileId)) {
             moveCards(dragData, destinationPileId);
             render();
             checkWin();
         } else {
             console.log("Illegal move attempted.");
-            // Render again to reset the card positions
             render();
         }
         
-        // Always remove the 'dragging' class from all cards
         document.querySelectorAll('.card').forEach(card => card.classList.remove('dragging'));
         
         dragData = null;
@@ -702,6 +718,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pile.addEventListener('dragover', handleDragOver);
             pile.addEventListener('drop', handleDrop);
         });
+        // Add a drop event listener to the game area as well
+        document.querySelector('.game-area').addEventListener('drop', handleDrop);
     }
 
     // Add this function after addPileEventListeners
