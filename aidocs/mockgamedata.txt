@@ -1,0 +1,44 @@
+
+You are an expert Javsscript developer.  Your task is to create a classic snake game that runs in a browser using vanilla javascript. Here are the features we need:
+
+1. The snake should move automatically
+2. The snake should start at the bottom center of the screen
+3. The snake should be able to move in 2 directions only, left turn and right turn.
+4. The snake should be able to grow longer when it eats food
+5. The snake should be able to die when it hits the edge of the screen or the snake itself
+6. The controls are: left arrow key and right arrow key to move the snake.
+7. The user should be able to perform many moves quickly, and the snake will remember all moves in order
+8. The grid size is 20x20 
+9. The playable area will expand to occupy the full area of the browser window.  
+10. On any resize, the game will never distort the snake blocks or food blocks.  It will only make them bigger or smaller to fill the screen.
+11. The snake will be green.  The food is red.
+12. Put this all in one file, index.html
+13. Display the score prominently in the game area, one point per food eaten.
+
+
+On game initialize:
+Display a light gray background over the play area.
+Display 'Snake!'
+Display a green button labeled 'Start'
+A press of the space bar or click of the button will start the game from the beginning.
+
+On game start:
+Remove all text from screen then show the following in a count down format, each message separated by a 1 second delay:
+- Ready
+- Set
+- Go!
+Only one of these 3 messages will be visible on the screen at a time.
+After Go! has expired, the screen background should go back to white and the game begins with the snake at the bottom center.
+
+
+On game over:
+Display a light gray background over the play area.
+Display 'Game Over!'
+Display green button labeled 'Restart'
+A press of the space bar or click of the button will restart the game from the beginning.
+
+Mobile:
+We also need to add support for running on a mobile device such as safari on ios or chrome.
+A tap anywhere on the left half of the screen will turn left.
+A tap anywhere on teh right half of the screen will turn right.
+All other browser events like scroll, multiple touch, etc should be disbled as much as possible during game play so not to interrupt the game.
