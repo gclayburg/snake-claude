@@ -1,0 +1,4 @@
+the original snake byte game used a screen of 38x36
+38 blocks wide, 36 blocks tall.
+4 lines of text at the bottom
+with a 1 block border around the play area
