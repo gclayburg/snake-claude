@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Classic Snake</title>
+    <style>
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .site-header a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .site-header a:hover {
+            text-decoration: underline;
+        }
+
+        /* Add these new styles at the beginning of the style section */
+        html, body {
+            overscroll-behavior: none;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Modify the existing body style */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Change from center to flex-start */
+            min-height: 100vh; /* Change from height to min-height */
+            margin: 0;
+            padding-top: 68px; /* Header + spacing */
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            touch-action: none; /* Disable browser handling of all panning and zooming gestures */
+            -webkit-touch-callout: none; /* Disable callout on long-press */
+            -webkit-user-select: none; /* Disable text selection */
+            user-select: none; /* Disable text selection */
+        }
+
+        /* Add this new style for the game area */
+        #gameArea {
+            touch-action: none;
+        }
+
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%; /* Ensure it takes full width */
+            max-width: 400px; /* Limit the maximum width */
+        }
+
+        #gameArea {
+            position: relative;
+            width: 400px; /* Change from 404px to 400px */
+            height: 400px; /* Change from 404px to 400px */
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 2px; /* Add padding to account for the border */
+            box-sizing: border-box; /* Include padding in the element's total width and height */
+        }
+
+        canvas {
+            border: 0px solid #000;
+            display: block;
+            /* This removes any extra space below the canvas */
+            width: 100%; /* Make canvas fill the entire game area */
+            height: 100%; /* Make canvas fill the entire game area */
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #gameOverlay {
+            position: absolute;
+            top: 2px;  /* Add this line to account for the border */
+            left: 2px;  /* Add this line to account for the border */
+            width: calc(100% - 4px);  /* Change to subtract the total border width */
+            height: calc(100% - 4px);  /* Change to subtract the total border width */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Change from center to flex-start */
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #gameOverlay p {
+            margin: 10px 0;
+        }
+
+        #sidePanel {
+            display: flex;
+            flex-direction: column;
+            width: 404px;
+            margin-top: 20px;
+        }
+
+        #topScoresBox {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #topScoresList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #topScoresList li {
+            width: 48%;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        #touchLog {
+            display: none;
+            width: 100%;
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #touchLog.show {
+            display: block;
+        }
+
+        #touchLog h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        #touchLogList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #touchLogList li {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+
+        #gameInstructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        #overlayText {
+            text-align: left;
+            white-space: pre-wrap;
+            padding: 0 20px;
+        }
+
+        .current-score {
+            color: green;
+            font-weight: bold;
+        }
+
+
+        #controlInstructions {
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            white-space: pre-line;
+            margin-bottom: 10px;
+        }
+
+        #startButton {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition-duration: 0.4s;
+        }
+
+        #startButton:hover {
+            background-color: #45a049;
+        }
+
+        #initialsInputContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        #initialsInput {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            position: relative;
+            margin-right: 10px;
+            width: 90px;
+            height: 40px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+        }
+
+        #initialsInput::placeholder {
+            color: #999;
+            letter-spacing: 10px;
+        }
+
+        #okButton {
+            font-size: 18px;
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            height: 44px;
+        }
+
+        #okButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        button, input {
+            touch-action: auto;
+        }
+
+        #enterInitialsText {
+            color: red;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        /* Add this new style for the game over background */
+        .game-over-background {
+            background-color: rgba(0, 0, 0, 0.7);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+        }
+
+        #pauseOverlay {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: calc(100% - 4px);
+            height: calc(100% - 4px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            z-index: 3;
+            text-align: center;
+        }
+
+        #pauseOverlay h2 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        #pauseOverlay p {
+            margin: 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <a href="index.html">← Back to Games</a>
+    </header>
+    <div id="gameContainer">
+        <div id="gameArea">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="gameOverlay">
+                <p id="overlayText"></p>
+                <p id="enterInitialsText"></p>
+                <div id="initialsInputContainer">
+                    <input type="text" id="initialsInput" maxlength="3" autocomplete="off" placeholder="___" />
+                    <button id="okButton" disabled>OK</button>
+                </div>
+                <p id="currentScore"></p>
+                <p id="highScore"></p>
+                <div id="controlInstructions"></div>
+                <div id="topScoresBox">
+                    <h3>Top 10 Scores</h3>
+                    <ol id="topScoresList"></ol>
+                </div>
+            </div>
+            <div id="pauseOverlay">
+                <h2>Game Paused</h2>
+                <p>Press P or Escape to resume</p>
+            </div>
+            <button id="startButton">Start</button>
+        </div>
+        <div id="sidePanel">
+            <div id="touchLog">
+                <h3>Touch Log</h3>
+                <ul id="touchLogList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('gameOverlay');
+        const currentScoreElement = document.getElementById('currentScore');
+        const highScoreElement = document.getElementById('highScore');
+        const overlayText = document.getElementById('overlayText');
+        const topScoresList = document.getElementById('topScoresList');
+        const gameInstructions = document.getElementById('gameInstructions');
+        const controlInstructions = document.getElementById('controlInstructions');
+        const startButton = document.getElementById('startButton');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        const initialsInput = document.getElementById('initialsInput');
+        const okButton = document.getElementById('okButton');
+        const touchLogList = document.getElementById('touchLogList');
+
+        const gridSize = 20;
+        const tileCount = 20;
+
+        let snake = [
+            { x: 10, y: 10 },
+        ];
+        let food = { x: 15, y: 15 };
+        let dx = 0;
+        let dy = -1;
+        let score = 0;
+        let highScore = 0;
+        let gameOver = false;
+        let gameState = 'initial';
+
+        let highScores = [];
+        let isNewHighScore = false;
+        let currentInitials = '';
+        let currentPlayerScore = null;
+
+        let nextDirection = { dx: 0, dy: -1 };
+        let inputQueue = [];
+        let updateInterval = 100;
+        let loopCount = 0;
+
+        function updatePauseOverlay() {
+            pauseOverlay.style.display = gameState === 'paused' ? 'flex' : 'none';
+        }
+
+        function pauseGame() {
+            if (gameState !== 'playing') return;
+            gameState = 'paused';
+            updatePauseOverlay();
+        }
+
+        function resumeGame() {
+            if (gameState !== 'paused') return;
+            gameState = 'playing';
+            updatePauseOverlay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function togglePause() {
+            if (gameState === 'playing') {
+                pauseGame();
+            } else if (gameState === 'paused') {
+                resumeGame();
+            }
+        }
+
+        function initGame() {
+            snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
+            food = { x: 15, y: 15 };
+            dx = 0;
+            dy = -1;
+            nextDirection = { dx: 0, dy: -1 };
+            score = 0;
+            gameOver = true;
+            gameState = 'initial';
+            loadHighScores();
+            overlay.style.display = 'flex';
+            overlayText.textContent = 'Snake Game';
+            controlInstructions.textContent = 'Controls:\nLeft arrow / Touch left: turn left\nRight arrow / Touch right: turn right';
+            controlInstructions.style.display = 'block';
+            currentPlayerScore = null;
+            
+            const touchLog = document.getElementById('touchLog');
+            if (shouldShowTouchLog()) {
+                touchLog.classList.add('show');
+            } else {
+                touchLog.classList.remove('show');
+            }
+            
+            startButton.textContent = 'Start';
+            startButton.style.display = 'block';
+            updatePauseOverlay();
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none';
+            document.getElementById('enterInitialsText').style.display = 'none';
+            updateTopScoresDisplay();
+            addTouchControls();
+        }
+
+        function loadHighScores() {
+            const savedScores = localStorage.getItem('snakeHighScores');
+            highScores = savedScores ? JSON.parse(savedScores) : [];
+        }
+
+        function saveHighScores() {
+            localStorage.setItem('snakeHighScores', JSON.stringify(highScores));
+        }
+
+        function addHighScore(score, initials) {
+            currentPlayerScore = { score, initials };
+            highScores.push(currentPlayerScore);
+            highScores.sort((a, b) => b.score - a.score);
+            highScores = highScores.slice(0, 10);
+            saveHighScores();
+            updateTopScoresDisplay();
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            gameOver = true;
+            updatePauseOverlay();
+            isNewHighScore = checkNewHighScore(score);
+
+            // Apply the game over background to the gameOverlay
+            overlay.classList.add('game-over-background');
+
+            if (isNewHighScore) {
+                overlayText.textContent = `New high score #${isNewHighScore}!`;
+                document.getElementById('enterInitialsText').textContent = 'Enter Initials:';
+                document.getElementById('enterInitialsText').style.display = 'block';
+                initialsInput.value = '';
+                initialsInput.placeholder = '___';
+                initialsInput.style.display = 'block';
+                okButton.style.display = 'inline-block';
+                okButton.disabled = true;
+                currentInitials = '';
+                
+                setTimeout(() => {
+                    initialsInput.focus();
+                    initialsInput.setSelectionRange(0, 0);
+                }, 0);
+
+                startButton.disabled = true;
+                startButton.style.display = 'none';
+                controlInstructions.style.display = 'none';
+            } else {
+                showHighScores();
+            }
+            overlay.style.display = 'flex';
+            updateTopScoresDisplay();
+        }
+
+        function checkNewHighScore(score) {
+            if (score === 0) return false;
+            for (let i = 0; i < highScores.length; i++) {
+                if (score > highScores[i].score) {
+                    return i + 1;
+                }
+            }
+            return highScores.length < 10 ? highScores.length + 1 : false;
+        }
+
+        function showHighScores() {
+            overlayText.textContent = 'Game Over!';
+            document.getElementById('enterInitialsText').style.display = 'none';
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none';
+            currentScoreElement.textContent = `Your score: ${score}`;
+            highScoreElement.textContent = '';
+            startButton.textContent = 'Play again';
+            startButton.style.display = 'block';
+            startButton.disabled = false;
+            controlInstructions.style.display = 'block';
+            
+            updateTopScoresDisplay();
+            
+            const topScoresBox = document.getElementById('topScoresBox');
+            topScoresBox.style.display = 'block';
+            
+            overlay.style.display = 'flex';
+            overlay.style.flexDirection = 'column';
+            overlay.style.justifyContent = 'flex-start';
+            overlay.style.alignItems = 'center';
+            overlay.style.overflowY = 'auto';
+            overlay.style.maxHeight = '80vh';
+        }
+
+        function startGame() {
+            gameState = 'starting';
+
+            // Remove the game over background when starting a new game
+            // overlay.classList.remove('game-over-background');
+
+            snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
+            food = { x: 15, y: 15 };
+            dx = 0;
+            dy = -1;
+            nextDirection = { dx: 0, dy: -1 };
+            score = 0;
+            gameOver = false;
+            currentPlayerScore = null;
+
+            startButton.style.display = 'none';
+            updatePauseOverlay();
+            currentScoreElement.style.display = 'none';
+            highScoreElement.style.display = 'none';
+            initialsInput.style.display = 'none';
+            okButton.style.display = 'none';
+            controlInstructions.style.display = 'none';
+
+            clearCanvas();
+            drawWalls();
+            overlay.classList.add('game-over-background');
+
+            overlay.style.display = 'flex';
+
+            let countdown = ['Ready', 'Set', 'Go!'];
+            let index = 0;
+
+            function updateCountdown() {
+                if (index < countdown.length) {
+                    overlayText.textContent = countdown[index];
+                    index++;
+                    setTimeout(updateCountdown, 1000);
+                } else {
+                    overlay.style.display = 'none';
+                    gameState = 'playing';
+                    updatePauseOverlay();
+                    canvas.style.touchAction = 'none';
+                    loopCount = 0;
+                    requestAnimationFrame(gameLoop);
+                }
+            }
+
+            updateCountdown();
+
+            document.getElementById('topScoresBox').style.display = 'none';
+        }
+
+        function gameLoop() {
+            if (gameState === 'playing') {
+                clearCanvas();
+                processInputQueue();
+                moveSnake();
+                drawWalls();
+                drawFood();
+                drawSnake();
+                checkCollision();
+                drawScore();
+                updateTopScoresDisplay();
+                setTimeout(() => requestAnimationFrame(gameLoop), updateInterval)
+            }
+        }
+
+        function processInputQueue() {
+            const input = inputQueue.shift();
+            if (input === 'left') {
+                turnLeft();
+            } else if (input === 'right') {
+                turnRight();
+            }
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawWalls() {
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+        }
+
+        function moveSnake() {
+            dx = nextDirection.dx;
+            dy = nextDirection.dy;
+
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                generateFood();
+                updateTopScoresDisplay();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateFood() {
+            let newFood;
+            do {
+                newFood = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+            } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+
+            food = newFood;
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                endGame();
+            }
+
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    endGame();
+                }
+            }
+        }
+
+        function drawScore() {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        function turnLeft() {
+            if (dx === 0 && dy === -1) {
+                nextDirection = { dx: -1, dy: 0 };
+            } else if (dx === -1 && dy === 0) {
+                nextDirection = { dx: 0, dy: 1 };
+            } else if (dx === 0 && dy === 1) {
+                nextDirection = { dx: 1, dy: 0 };
+            } else if (dx === 1 && dy === 0) {
+                nextDirection = { dx: 0, dy: -1 };
+            }
+        }
+
+        function turnRight() {
+            if (dx === 0 && dy === -1) {
+                nextDirection = { dx: 1, dy: 0 };
+            } else if (dx === 1 && dy === 0) {
+                nextDirection = { dx: 0, dy: 1 };
+            } else if (dx === 0 && dy === 1) {
+                nextDirection = { dx: -1, dy: 0 };
+            } else if (dx === -1 && dy === 0) {
+                nextDirection = { dx: 0, dy: -1 };
+            }
+        }
+
+        function updateTopScoresDisplay() {
+            const topScoresBox = document.getElementById('topScoresBox');
+            const topScoresList = document.getElementById('topScoresList');
+            
+            topScoresList.innerHTML = '';
+            let displayedScores = [...highScores];
+
+            if (gameOver && score > 0 && !currentPlayerScore) {
+                let insertIndex = displayedScores.findIndex(entry => score > entry.score);
+                if (insertIndex === -1 && displayedScores.length < 10) {
+                    insertIndex = displayedScores.length;
+                }
+                if (insertIndex !== -1) {
+                    displayedScores.splice(insertIndex, 0, { score, initials: currentInitials || 'YOU' });
+                }
+            }
+
+            displayedScores = displayedScores.slice(0, 10);
+
+            for (let i = 0; i < displayedScores.length; i++) {
+                const li = document.createElement('li');
+                const scoreEntry = displayedScores[i];
+
+                if (gameOver && !currentPlayerScore && scoreEntry.initials === 'YOU') {
+                    li.innerHTML = `${i + 1}. <span class="current-score">YOU - ${scoreEntry.score}</span>`;
+                } else {
+                    const isCurrentPlayer = currentPlayerScore && scoreEntry.score === currentPlayerScore.score && scoreEntry.initials === currentPlayerScore.initials;
+                    if (isCurrentPlayer) {
+                        li.innerHTML = `${i + 1}. <span class="current-score">${scoreEntry.initials} - ${scoreEntry.score}</span>`;
+                    } else {
+                        li.textContent = `${i + 1}. ${scoreEntry.initials} - ${scoreEntry.score}`;
+                    }
+                }
+                topScoresList.appendChild(li);
+            }
+
+            for (let i = displayedScores.length; i < 10; i++) {
+                const li = document.createElement('li');
+                li.textContent = `${i + 1}. - - -`;
+                topScoresList.appendChild(li);
+            }
+
+            topScoresBox.style.display = gameOver ? 'block' : 'none';
+        }
+
+        function addTouchControls() {
+            let lastLeftTapTime = 0;
+            let lastRightTapTime = 0;
+            const tapThreshold = 250;
+            let touchCount = 0;
+
+            document.addEventListener('touchstart', handleTouch, { passive: false });
+            document.addEventListener('touchmove', handleTouch, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+            function handleTouch(event) {
+                if (gameState === 'playing') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    if (isNewHighScore && event.target === initialsInput) {
+                        return;
+                    }
+
+                    touchCount++;
+                    const currentTime = new Date().getTime();
+                    
+                    const touch = event.touches[event.touches.length - 1];
+                    const screenWidth = window.innerWidth;
+                    const touchX = touch.clientX;
+
+                    logTouch(`Touch #${touchCount} - Start: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
+
+                    if (touchX < screenWidth / 2) {
+                        const leftDiff = currentTime - lastLeftTapTime;
+                        logTouch(`  Left check: diff=${leftDiff}, threshold=${tapThreshold}`, currentTime);
+                        if (leftDiff > tapThreshold) {
+                            logTouch(`  Left action: Pushing 'left' to queue`, currentTime);
+                            if (inputQueue.length === 0 || inputQueue[inputQueue.length - 1] !== 'left') {
+                                inputQueue.push('left');
+                                logTouch(`    'left' added to queue`, currentTime);
+                            } else {
+                                logTouch(`    'left' not added (duplicate)`, currentTime);
+                            }
+                            lastLeftTapTime = currentTime;
+                            logTouch(`  Updated lastLeftTapTime: ${lastLeftTapTime}`, currentTime);
+                        } else {
+                            logTouch(`  Left action skipped (too soon)`, currentTime);
+                        }
+                    } else {
+                        const rightDiff = currentTime - lastRightTapTime;
+                        logTouch(`  Right check: diff=${rightDiff}, threshold=${tapThreshold}`, currentTime);
+                        if (rightDiff > tapThreshold) {
+                            logTouch(`  Right action: Pushing 'right' to queue`, currentTime);
+                            if (inputQueue.length === 0 || inputQueue[inputQueue.length - 1] !== 'right') {
+                                inputQueue.push('right');
+                                logTouch(`    'right' added to queue`, currentTime);
+                            } else {
+                                logTouch(`    'right' not added (duplicate)`, currentTime);
+                            }
+                            lastRightTapTime = currentTime;
+                            logTouch(`  Updated lastRightTapTime: ${lastRightTapTime}`, currentTime);
+                        } else {
+                            logTouch(`  Right action skipped (too soon)`, currentTime);
+                        }
+                    }
+
+                    logTouch(`Touch #${touchCount} - End: ${lastLeftTapTime} ${lastRightTapTime}`, currentTime);
+                    logTouch(`Current inputQueue: ${JSON.stringify(inputQueue)}`, currentTime);
+                }
+            }
+
+            function handleTouchEnd(event) {
+                if (gameState === 'playing') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    if (event.touches.length === 0) {
+                        lastLeftTapTime = 0;
+                        lastRightTapTime = 0;
+                        logTouch('All touches ended, reset tap times', new Date().getTime());
+                    }
+                }
+            }
+
+            function getCurrentTimestamp() {
+                return new Date().toISOString().split('T')[1].slice(0, -1);
+            }
+
+            function logTouch(message, timestamp) {
+                if (!shouldShowTouchLog()) return;
+
+                const formattedTimestamp = getCurrentTimestamp();
+                const logEntry = `${formattedTimestamp} - ${message}`;
+                
+                const li = document.createElement('li');
+                li.textContent = logEntry;
+                touchLogList.insertBefore(li, touchLogList.firstChild);
+                
+                while (touchLogList.children.length > 50) {
+                    touchLogList.removeChild(touchLogList.lastChild);
+                }
+
+                console.log(logEntry);
+            }
+        }
+
+        function shouldShowTouchLog() {
+            return window.location.hash === '#showtouchlog';
+        }
+
+        window.addEventListener('hashchange', function() {
+            const touchLog = document.getElementById('touchLog');
+            if (shouldShowTouchLog()) {
+                touchLog.classList.add('show');
+            } else {
+                touchLog.classList.remove('show');
+            }
+        });
+
+        function updateInitialsDisplay() {
+            initialsInput.value = currentInitials.padEnd(3, '_');
+            const charWidth = 24; // Width of each character (including letter-spacing)
+            const cursorPosition = currentInitials.length * charWidth;
+            initialsInput.style.setProperty('--cursor-position', `${cursorPosition}px`);
+
+            // Enable or disable the OK button based on initials length
+            okButton.disabled = currentInitials.length !== 3;
+        }
+
+        function submitHighScore() {
+            console.log('submit high score from submitHighScore function');
+            addHighScore(score, currentInitials);
+            isNewHighScore = false;
+            showHighScores();
+            updateTopScoresDisplay();
+        }
+
+        initialsInput.addEventListener('input', function (e) {
+            let newValue = this.value.toUpperCase();
+
+            // Ensure we only have letters
+            newValue = newValue.replace(/[^A-Z]/g, '');
+
+            // Limit to 3 characters
+            newValue = newValue.slice(0, 3);
+
+            // Update the input value
+            this.value = newValue;
+            currentInitials = newValue;
+
+            // Enable/disable OK button
+            okButton.disabled = newValue.length !== 3;
+
+            // Update placeholder based on input
+            this.placeholder = '_'.repeat(Math.max(0, 3 - newValue.length));
+        });
+
+        initialsInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && this.selectionStart === this.selectionEnd) {
+                // If cursor is at the end, just let the default behavior happen
+                if (this.selectionStart === this.value.length) return;
+
+                // Prevent default backspace behavior
+                e.preventDefault();
+
+                // Remove the character before the cursor
+                const cursorPos = this.selectionStart;
+                this.value = this.value.slice(0, cursorPos - 1) + this.value.slice(cursorPos);
+
+                // Move the cursor back
+                this.setSelectionRange(cursorPos - 1, cursorPos - 1);
+
+                // Trigger input event to update state
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+
+        initialsInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && this.value.length === 3) {
+                console.log('submit high score from enter key');
+                submitHighScore();
+            }
+        });
+
+        okButton.addEventListener('click', () => {
+            if (currentInitials.length === 3) {
+                console.log('submit high score from ok button');
+                submitHighScore();
+                initialsInput.style.display = 'none';
+                okButton.style.display = 'none';
+                startButton.disabled = false; // Enable start button after OK is pressed
+            }
+        });
+
+        startButton.addEventListener('click', () => {
+            if ((gameState === 'initial' || gameState === 'gameover') && !isNewHighScore && !startButton.disabled) {
+                startGame();
+            }
+        });
+
+        // Add this function to handle initials input on touch devices
+        function handleInitialsInput(event) {
+            event.preventDefault();
+            initialsInput.focus();
+        }
+
+        // Add touch event listeners for the initials input
+        initialsInput.addEventListener('touchstart', handleInitialsInput, false);
+        initialsInput.addEventListener('touchend', handleInitialsInput, false);
+
+        // Add this event listener after the existing event listeners
+        document.addEventListener('keydown', (e) => {
+            if ((gameState === 'initial' || gameState === 'gameover') && e.code === 'Space') {
+                startGame();
+                return;
+            }
+
+            if (gameState === 'gameover') {
+                if (isNewHighScore) {
+                    if (e.key.length === 1 && /[a-zA-Z]/.test(e.key) && currentInitials.length < 3) {
+                        currentInitials += e.key.toUpperCase();
+                        updateInitialsDisplay();
+                    } else if (e.key === 'Backspace') {
+                        currentInitials = currentInitials.slice(0, -1);
+                        updateInitialsDisplay();
+                    }
+                } else if (e.code === 'Space') {
+                    initGame();
+                    startGame();
+                }
+                return;
+            }
+
+            if (gameState === 'playing' || gameState === 'paused') {
+                if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                    e.preventDefault();
+                    togglePause();
+                    return;
+                }
+            }
+
+            if (gameState !== 'playing') return;
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    inputQueue.push('left');
+                    break;
+                case 'ArrowRight':
+                    inputQueue.push('right');
+                    break;
+            }
+        });
+
+        // Add this function to prevent default touch behavior
+        function preventDefaultTouchBehavior(event) {
+            if (gameState === 'playing' && event.target.tagName.toLowerCase() !== 'button' && event.target.tagName.toLowerCase() !== 'input') {
+                event.preventDefault();
+            }
+        }
+
+        // Add these event listeners after initGame();
+        document.addEventListener('touchstart', preventDefaultTouchBehavior, { passive: false });
+        document.addEventListener('touchmove', preventDefaultTouchBehavior, { passive: false });
+        document.addEventListener('touchend', preventDefaultTouchBehavior, { passive: false });
+        document.addEventListener('touchcancel', preventDefaultTouchBehavior, { passive: false });
+        document.addEventListener('contextmenu', preventDefaultTouchBehavior, { passive: false });
+
+        // Add this new function to handle button touches
+        function handleButtonTouch(event) {
+            if (event.target.tagName.toLowerCase() === 'button') {
+                event.stopPropagation();
+            }
+        }
+
+        // Add these event listeners for buttons
+        document.addEventListener('touchstart', handleButtonTouch, { passive: false });
+        document.addEventListener('touchend', handleButtonTouch, { passive: false });
+
+        initGame(); // Call this at the end of the script
+    </script>
+</body>
+
+</html>

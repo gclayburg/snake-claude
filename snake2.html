@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Snake Game</title>
+    <title>Fullscreen Snake</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
     <style>
@@ -87,9 +87,38 @@
             margin: 0;
             font-size: 24px;
         }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .site-header a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .site-header a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+<header class="site-header">
+    <a href="index.html">← Back to Games</a>
+</header>
 <div id="game-container">
     <canvas id="game-canvas"></canvas>
     <div id="overlay">
@@ -152,9 +181,11 @@
         }
     }
 
+    const HEADER_HEIGHT = 48;
+
     function resizeCanvas() {
         let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
+        let windowHeight = window.innerHeight - HEADER_HEIGHT;
 
         // Maintain aspect ratio
         let size = Math.min(windowWidth, windowHeight);
@@ -167,7 +198,7 @@
 
         // Center the canvas
         canvas.style.left = ((windowWidth - size) / 2) + 'px';
-        canvas.style.top = ((windowHeight - size) / 2) + 'px';
+        canvas.style.top = (HEADER_HEIGHT + (windowHeight - size) / 2) + 'px';
 
         updateCellSize();
         drawGame();
