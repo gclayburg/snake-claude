@@ -61,6 +61,32 @@
             font-size: 24px;
             z-index: 1;
         }
+
+        #pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            z-index: 2;
+            text-align: center;
+        }
+
+        #pause-overlay h2 {
+            margin: 0 0 10px;
+            font-size: 48px;
+        }
+
+        #pause-overlay p {
+            margin: 0;
+            font-size: 24px;
+        }
     </style>
 </head>
 <body>
@@ -71,6 +97,10 @@
         <button id="start-button">Start</button>
     </div>
     <div id="score">Score: 0</div>
+    <div id="pause-overlay">
+        <h2>Game Paused</h2>
+        <p>Press P or Escape to resume</p>
+    </div>
 </div>
 
 <script>
@@ -80,6 +110,7 @@
     const overlayMessage = document.getElementById('overlay-message');
     const startButton = document.getElementById('start-button');
     const scoreElement = document.getElementById('score');
+    const pauseOverlay = document.getElementById('pause-overlay');
 
     const GRID_SIZE = 20;
     let cellSize;
@@ -93,7 +124,33 @@
 
     let score = 0;
     let gameInterval;
-    let gameState = 'init'; // 'init', 'countdown', 'playing', 'gameover'
+    let gameState = 'init'; // 'init', 'countdown', 'playing', 'paused', 'gameover'
+
+    function updatePauseOverlay() {
+        pauseOverlay.style.display = gameState === 'paused' ? 'flex' : 'none';
+    }
+
+    function pauseGame() {
+        if (gameState !== 'playing') return;
+        clearInterval(gameInterval);
+        gameState = 'paused';
+        updatePauseOverlay();
+    }
+
+    function resumeGame() {
+        if (gameState !== 'paused') return;
+        gameState = 'playing';
+        updatePauseOverlay();
+        gameInterval = setInterval(gameLoop, 100);
+    }
+
+    function togglePause() {
+        if (gameState === 'playing') {
+            pauseGame();
+        } else if (gameState === 'paused') {
+            resumeGame();
+        }
+    }
 
     function resizeCanvas() {
         let windowWidth = window.innerWidth;
@@ -130,11 +187,16 @@
             if (e.code === 'Space') {
                 startGame();
             }
-        } else if (gameState === 'playing') {
-            if (e.code === 'ArrowLeft') {
-                turnSnake('left');
-            } else if (e.code === 'ArrowRight') {
-                turnSnake('right');
+        } else if (gameState === 'playing' || gameState === 'paused') {
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                e.preventDefault();
+                togglePause();
+            } else if (gameState === 'playing') {
+                if (e.code === 'ArrowLeft') {
+                    turnSnake('left');
+                } else if (e.code === 'ArrowRight') {
+                    turnSnake('right');
+                }
             }
         }
     });
@@ -163,6 +225,7 @@
     }, { passive: false });
 
     function startGame() {
+        updatePauseOverlay();
         overlay.style.display = 'none';
         overlayMessage.textContent = '';
         startButton.style.display = 'none';
@@ -220,6 +283,8 @@
     }
 
     function gameLoop() {
+        if (gameState !== 'playing') return;
+
         // Update snake direction based on turns
         if (snakeTurns.length > 0) {
             let turn = snakeTurns.shift();
@@ -297,6 +362,7 @@
     function gameOver() {
         clearInterval(gameInterval);
         gameState = 'gameover';
+        updatePauseOverlay();
 
         overlay.style.display = 'flex';
         overlayMessage.textContent = 'Game Over!';

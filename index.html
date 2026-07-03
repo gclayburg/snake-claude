@@ -265,6 +265,32 @@
             right: 2px;
             bottom: 2px;
         }
+
+        #pauseOverlay {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: calc(100% - 4px);
+            height: calc(100% - 4px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            z-index: 3;
+            text-align: center;
+        }
+
+        #pauseOverlay h2 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        #pauseOverlay p {
+            margin: 0;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -287,6 +313,10 @@
                     <ol id="topScoresList"></ol>
                 </div>
             </div>
+            <div id="pauseOverlay">
+                <h2>Game Paused</h2>
+                <p>Press P or Escape to resume</p>
+            </div>
             <button id="startButton">Start</button>
         </div>
         <div id="sidePanel">
@@ -308,6 +338,7 @@
         const gameInstructions = document.getElementById('gameInstructions');
         const controlInstructions = document.getElementById('controlInstructions');
         const startButton = document.getElementById('startButton');
+        const pauseOverlay = document.getElementById('pauseOverlay');
         const initialsInput = document.getElementById('initialsInput');
         const okButton = document.getElementById('okButton');
         const touchLogList = document.getElementById('touchLogList');
@@ -336,6 +367,31 @@
         let updateInterval = 100;
         let loopCount = 0;
 
+        function updatePauseOverlay() {
+            pauseOverlay.style.display = gameState === 'paused' ? 'flex' : 'none';
+        }
+
+        function pauseGame() {
+            if (gameState !== 'playing') return;
+            gameState = 'paused';
+            updatePauseOverlay();
+        }
+
+        function resumeGame() {
+            if (gameState !== 'paused') return;
+            gameState = 'playing';
+            updatePauseOverlay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function togglePause() {
+            if (gameState === 'playing') {
+                pauseGame();
+            } else if (gameState === 'paused') {
+                resumeGame();
+            }
+        }
+
         function initGame() {
             snake = [{ x: Math.floor(tileCount / 2), y: tileCount - 1 }];
             food = { x: 15, y: 15 };
@@ -361,6 +417,7 @@
             
             startButton.textContent = 'Start';
             startButton.style.display = 'block';
+            updatePauseOverlay();
             initialsInput.style.display = 'none';
             okButton.style.display = 'none';
             document.getElementById('enterInitialsText').style.display = 'none';
@@ -389,6 +446,7 @@
         function endGame() {
             gameState = 'gameover';
             gameOver = true;
+            updatePauseOverlay();
             isNewHighScore = checkNewHighScore(score);
 
             // Apply the game over background to the gameOverlay
@@ -471,6 +529,7 @@
             currentPlayerScore = null;
 
             startButton.style.display = 'none';
+            updatePauseOverlay();
             currentScoreElement.style.display = 'none';
             highScoreElement.style.display = 'none';
             initialsInput.style.display = 'none';
@@ -494,6 +553,7 @@
                 } else {
                     overlay.style.display = 'none';
                     gameState = 'playing';
+                    updatePauseOverlay();
                     canvas.style.touchAction = 'none';
                     loopCount = 0;
                     requestAnimationFrame(gameLoop);
@@ -897,6 +957,14 @@
                     startGame();
                 }
                 return;
+            }
+
+            if (gameState === 'playing' || gameState === 'paused') {
+                if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                    e.preventDefault();
+                    togglePause();
+                    return;
+                }
             }
 
             if (gameState !== 'playing') return;
